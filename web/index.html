@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Delete Account</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    <style>
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+        }
+
+        :root{
+          --bg:#f4f4f2;
+          --card:#ffffff;
+          --text:#111;
+          --muted:#666;
+          --border:rgba(0,0,0,0.08);
+          --danger:#c0392b;
+          --danger-dark:#a93226;
+          --input:#f8f8f8;
+        }
+
+        @media (prefers-color-scheme: dark){
+          :root{
+            --bg:#171717;
+            --card:#232323;
+            --text:#f5f5f5;
+            --muted:#a1a1a1;
+            --border:rgba(255,255,255,0.08);
+            --input:#2b2b2b;
+          }
+        }
+
+        body{
+          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+          background:var(--bg);
+          color:var(--text);
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:24px;
+        }
+
+        .card{
+          width:100%;
+          max-width:460px;
+          background:var(--card);
+          border:1px solid var(--border);
+          border-radius:28px;
+          padding:32px;
+          box-shadow:0 10px 35px rgba(0,0,0,0.06);
+        }
+
+        .icon-wrap{
+          width:68px;
+          height:68px;
+          margin:0 auto 20px;
+          border-radius:50%;
+          background:rgba(192,57,43,0.12);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+
+        .icon-wrap i{
+          font-size:34px;
+          color:var(--danger);
+        }
+
+        h1{
+          text-align:center;
+          font-size:28px;
+          margin-bottom:10px;
+        }
+
+        .subtitle{
+          text-align:center;
+          color:var(--muted);
+          font-size:14px;
+          line-height:1.6;
+          margin-bottom:28px;
+        }
+
+        .warning-box{
+          background:rgba(192,57,43,0.06);
+          border:1px solid rgba(192,57,43,0.15);
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:24px;
+        }
+
+        .warning-box p{
+          font-size:12px;
+          color:var(--muted);
+          text-transform:uppercase;
+          letter-spacing:0.08em;
+          margin-bottom:12px;
+          font-weight:700;
+        }
+
+        .warning-box ul{
+          list-style:none;
+          display:flex;
+          flex-direction:column;
+          gap:10px;
+        }
+
+        .warning-box li{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          font-size:14px;
+        }
+
+        .warning-box i{
+          color:var(--danger);
+          font-size:18px;
+        }
+
+        .field{
+          margin-bottom:18px;
+        }
+
+        .field label{
+          display:block;
+          margin-bottom:8px;
+          font-size:14px;
+          font-weight:500;
+        }
+
+        .field input{
+          width:100%;
+          padding:15px 18px;
+          border-radius:16px;
+          border:1px solid var(--border);
+          background:var(--input);
+          color:var(--text);
+          font-size:15px;
+          outline:none;
+          transition:0.2s ease;
+        }
+
+        .field input:focus{
+          border-color:rgba(192,57,43,0.4);
+          box-shadow:0 0 0 4px rgba(192,57,43,0.08);
+        }
+
+        .field input::placeholder{
+          color:#888;
+        }
+
+        .confirm-row{
+          display:flex;
+          gap:12px;
+          padding:16px;
+          border-radius:16px;
+          background:rgba(192,57,43,0.08);
+          margin-top:8px;
+        }
+
+        .confirm-row input{
+          margin-top:3px;
+          accent-color:var(--danger);
+          width:18px;
+          height:18px;
+          flex-shrink:0;
+        }
+
+        .confirm-row label{
+          font-size:14px;
+          line-height:1.5;
+          color:var(--danger);
+        }
+
+        .btn-delete{
+          width:100%;
+          margin-top:24px;
+          border:none;
+          border-radius:18px;
+          padding:16px;
+          background:#d7d7d7;
+          color:#888;
+          font-size:15px;
+          font-weight:600;
+          cursor:not-allowed;
+          transition:0.2s ease;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:10px;
+        }
+
+        .btn-delete.active{
+          background:var(--danger);
+          color:white;
+          cursor:pointer;
+        }
+
+        .btn-delete.active:hover{
+          background:var(--danger-dark);
+          transform:translateY(-1px);
+        }
+
+        .status{
+          margin-top:18px;
+          padding:14px;
+          border-radius:14px;
+          display:none;
+          font-size:14px;
+          line-height:1.5;
+        }
+
+        .status.error{
+          display:block;
+          background:rgba(192,57,43,0.1);
+          color:var(--danger);
+        }
+
+        .spinner{
+          width:18px;
+          height:18px;
+          border:2px solid currentColor;
+          border-top-color:transparent;
+          border-radius:50%;
+          animation:spin 0.8s linear infinite;
+          display:none;
+        }
+
+        .spinner.active{
+          display:inline-block;
+        }
+
+        @keyframes spin{
+          to{
+            transform:rotate(360deg);
+          }
+        }
+
+        .overlay{
+          position:fixed;
+          inset:0;
+          background:rgba(0,0,0,0.55);
+          display:none;
+          align-items:center;
+          justify-content:center;
+          z-index:999;
+          backdrop-filter:blur(4px);
+        }
+
+        .overlay.active{
+          display:flex;
+        }
+
+        .popup{
+          background:var(--card);
+          width:90%;
+          max-width:380px;
+          border-radius:28px;
+          padding:32px;
+          text-align:center;
+          animation:popup 0.25s ease;
+        }
+
+        @keyframes popup{
+          from{
+            opacity:0;
+            transform:translateY(20px);
+          }
+          to{
+            opacity:1;
+            transform:translateY(0);
+          }
+        }
+
+        .popup-icon{
+          width:80px;
+          height:80px;
+          margin:0 auto 20px;
+          border-radius:50%;
+          background:#4caf50;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+
+        .popup-icon i{
+          color:white;
+          font-size:42px;
+        }
+
+        .popup h2{
+          margin-bottom:12px;
+          font-size:24px;
+        }
+
+        .popup p{
+          color:var(--muted);
+          line-height:1.6;
+          font-size:14px;
+        }
+
+        .popup button{
+          margin-top:24px;
+          width:100%;
+          border:none;
+          background:var(--danger);
+          color:white;
+          padding:14px;
+          border-radius:16px;
+          font-size:15px;
+          font-weight:600;
+          cursor:pointer;
+        }
+
+        .popup button:hover{
+          background:var(--danger-dark);
+        }
+
+        @media(max-width:480px){
+          .card{
+            padding:24px;
+            border-radius:24px;
+          }
+
+          h1{
+            font-size:24px;
+          }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="overlay" id="successPopup">
+    <div class="popup">
+        <div class="popup-icon">
+            <i class="ti ti-check"></i>
+        </div>
+
+        <h2>Account Deleted</h2>
+
+        <p>
+            Your account and associated data have been permanently removed.
+        </p>
+
+        <button onclick="redirectNow()">
+            Continue
+        </button>
+    </div>
+</div>
+
+<div class="card">
+
+    <div class="icon-wrap">
+        <i class="ti ti-alert-triangle"></i>
+    </div>
+
+    <h1>Delete Account</h1>
+
+    <p class="subtitle">
+        This action is permanent and cannot be undone.
+    </p>
+
+    <div class="warning-box">
+        <p>What will be removed</p>
+
+        <ul>
+            <li><i class="ti ti-user-x"></i> Account profile</li>
+            <li><i class="ti ti-photo-off"></i> Uploaded media</li>
+            <li><i class="ti ti-database-off"></i> Associated server data</li>
+        </ul>
+    </div>
+
+    <div class="field">
+        <label>Email Address</label>
+
+        <input
+                type="email"
+                id="email"
+                placeholder="you@example.com"
+                oninput="toggleBtn()"
+        />
+    </div>
+
+    <div class="field">
+        <label>Password</label>
+        <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                oninput="toggleBtn()"
+        />
+        <button type="button" onclick="togglePassword()">Show</button>
+    </div>
+
+    <div class="confirm-row">
+        <input
+                type="checkbox"
+                id="confirm-check"
+                onchange="toggleBtn()"
+        />
+
+        <label for="confirm-check">
+            I understand this action is irreversible.
+        </label>
+    </div>
+
+    <button
+            class="btn-delete"
+            id="delete-btn"
+            onclick="deleteAccount()"
+    >
+        <i class="ti ti-trash"></i>
+
+        <span id="btn-text">
+        Permanently Delete Account
+      </span>
+
+        <span class="spinner" id="spinner"></span>
+    </button>
+
+    <div class="status" id="status-msg"></div>
+
+</div>
+
+<script>
+    const SUPABASE_URL =
+      'https://walrlsavtbcyvqtegock.supabase.co';
+
+    const SUPABASE_ANON_KEY =
+      'sb_secret_-uBIGXtQFrDbbDsYthU0pA_ruFQxlYC';
+
+    const supabaseClient =
+      supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+    function toggleBtn() {
+      const email =
+        document.getElementById('email').value.trim();
+
+      const password =
+        document.getElementById('password').value;
+
+      const checked =
+        document.getElementById('confirm-check').checked;
+
+      const btn =
+        document.getElementById('delete-btn');
+
+      if (email && password && checked) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    }
+
+    function showStatus(message) {
+      const status =
+        document.getElementById('status-msg');
+
+      status.className = 'status error';
+      status.textContent = message;
+    }
+
+    function setLoading(isLoading) {
+      const spinner =
+        document.getElementById('spinner');
+
+      const btn =
+        document.getElementById('delete-btn');
+
+      const text =
+        document.getElementById('btn-text');
+
+      if (isLoading) {
+        spinner.classList.add('active');
+        btn.disabled = true;
+        text.textContent = 'Processing...';
+      } else {
+        spinner.classList.remove('active');
+        btn.disabled = false;
+        text.textContent =
+          'Permanently Delete Account';
+      }
+    }
+
+     function togglePassword() {
+    const input = document.getElementById('password');
+    const btn = event.target;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = 'Hide';
+    } else {
+      input.type = 'password';
+      btn.textContent = 'Show';
+    }
+  }
+
+    async function deleteAccount() {
+
+      const btn =
+        document.getElementById('delete-btn');
+
+      if (!btn.classList.contains('active')) {
+        return;
+      }
+
+      const email =
+        document.getElementById('email').value.trim();
+
+      const password =
+        document.getElementById('password').value;
+
+      setLoading(true);
+
+      try {
+
+        const {
+          data: authData,
+          error: authError
+        } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (authError) {
+          setLoading(false);
+          return showStatus(authError.message);
+        }
+
+        const {
+          error
+        } =
+        await supabaseClient.functions.invoke(
+          'delete-user',
+          {
+            body: {
+              userId: authData.user.id
+            }
+          }
+        );
+
+        if (error) {
+          setLoading(false);
+          return showStatus(error.message);
+        }
+
+        await supabaseClient.auth.signOut();
+
+        setLoading(false);
+
+        document
+          .getElementById('successPopup')
+          .classList.add('active');
+
+      } catch (err) {
+
+        setLoading(false);
+
+        showStatus(
+          'Something went wrong. Please try again.'
+        );
+      }
+    }
+
+    function redirectNow() {
+      window.location.href = '/';
+    }
+</script>
+
+</body>
+</html>
