@@ -46,7 +46,12 @@ serve(async (req) => {
       throw new Error(data.displayMessage || `YOCO Error: ${response.status}`)
     }
 
-    return new Response(JSON.stringify({ redirectUrl: data.redirectUrl }), {
+    // NEW: Wrap the YOCO redirect URL inside your verified domain's redirector
+    // Replace 'https://your-verified-domain.com/pay.html' with your actual hosted URL
+    const verifiedDomainPage = "https://walrlsavtbcyvqtegock.supabase.co/storage/v1/object/public/site/pay.html";
+    const finalRedirectUrl = `${verifiedDomainPage}?url=${encodeURIComponent(data.redirectUrl)}`;
+
+    return new Response(JSON.stringify({ redirectUrl: finalRedirectUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     })

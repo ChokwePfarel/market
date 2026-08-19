@@ -49,10 +49,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       SignUpRequested event,
       Emitter<AuthState> emit,
       ) async {
-    if (!event.email.endsWith('.edu')) {
-      emit(AuthError("Please use a valid university email (.edu)."));
-      return;
-    }
     emit(AuthLoading());
     try {
       final response =

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/utils/snackbar.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_event.dart';
 import '../auth/auth_state.dart';
@@ -64,15 +65,17 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            AppSnackBar.error(context, state.message);
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthLoading) {
               return const Center(child: CircularProgressIndicator.adaptive());
+            }
+
+            if (state is EmailVerificationRequired) {
+              return const VerifyPage();
             }
 
             return Padding(
@@ -89,8 +92,8 @@ class _SignupPageState extends State<SignupPage> {
                     TextFormField(
                       controller: _emailController,
                       decoration:  InputDecoration(
-                        labelText: 'University Email ',
-                        hintText: 'example@university.edu',
+                        labelText: 'University Email',
+                        hintText: 'student@university.ac.za',
                         prefixIcon: const Icon(Icons.mail),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
