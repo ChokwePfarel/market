@@ -93,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      obscureText: true,
+                      obscureText: false,
                       validator: (value) => (value == null || value.isEmpty) ? 'Enter password' : null,
                     ),
 

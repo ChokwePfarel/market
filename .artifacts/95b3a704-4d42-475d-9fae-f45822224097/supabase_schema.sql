@@ -26,7 +26,7 @@ USING (bucket_id = 'user-images' AND (storage.foldername(name))[1] = auth.uid():
 
 -- Create the profiles table
 CREATE TABLE public.profiles (
-  id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
+  id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL PRIMARY KEY,
   full_name TEXT,
   user_type TEXT DEFAULT 'Student',
   has_free_trial BOOLEAN DEFAULT TRUE,
@@ -83,7 +83,7 @@ EXECUTE FUNCTION public.handle_updated_at();
 -- Create product_images table
 CREATE TABLE public.product_images (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   url TEXT NOT NULL,
   path TEXT NOT NULL,
   type TEXT NOT NULL, -- 'profile' or 'product'
@@ -120,7 +120,7 @@ CREATE TABLE public.products (
   category TEXT NOT NULL,
   university TEXT NOT NULL,
   image_urls TEXT[], -- Array of image URLs
-  seller_id UUID REFERENCES auth.users NOT NULL,
+  seller_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   status TEXT DEFAULT 'active', -- 'active', 'pending_payment', 'sold'
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

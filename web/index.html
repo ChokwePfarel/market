@@ -539,15 +539,11 @@
         }
 
         const {
+          data,
           error
         } =
         await supabaseClient.functions.invoke(
-          'delete-user',
-          {
-            body: {
-              userId: authData.user.id
-            }
-          }
+          'delete-user-account'
         );
 
         if (error) {

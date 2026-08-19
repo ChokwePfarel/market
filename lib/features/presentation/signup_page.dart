@@ -75,10 +75,6 @@ class _SignupPageState extends State<SignupPage> {
               return const Center(child: CircularProgressIndicator.adaptive());
             }
 
-            if (state is EmailVerificationRequired) {
-              return VerifyPage();
-            }
-
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -86,33 +82,14 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(labelText: 'password',
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: Colors.black, width: 1.5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: Colors.black, width: 2),
-                        ),),
 
-                      validator: (value){
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        } else if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      }
-                    ),
-                    const SizedBox(height: 10),
+
+
 
                     TextFormField(
                       controller: _emailController,
                       decoration:  InputDecoration(
-                        labelText: 'University Email (.edu)',
+                        labelText: 'University Email ',
                         hintText: 'example@university.edu',
                         prefixIcon: const Icon(Icons.mail),
                         enabledBorder: OutlineInputBorder(
@@ -135,6 +112,30 @@ class _SignupPageState extends State<SignupPage> {
                         }
                         return null; // valid
                       },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(labelText: 'password',
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(color: Colors.black, width: 2),
+                          ),),
+
+                        validator: (value){
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a password';
+                          } else if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        }
                     ),
 
                     const SizedBox(height: 24),
