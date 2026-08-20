@@ -83,31 +83,49 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     },
                                     itemCount: widget.product.imageUrls.length,
                                     itemBuilder: (context, index) {
+                                      final url = widget.product.imageUrls[index];
+                                      debugPrint('ProductDetails: Loading image $index: $url');
                                       return Image.network(
-                                        widget.product.imageUrls[index],
+                                        url,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
-                                          return const Center(
-                                            child: Icon(
-                                              Icons.broken_image_outlined,
-                                              size: 60,
-                                              color: Colors.grey,
+                                          debugPrint('ProductDetails: Error loading image: $error');
+                                          return Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                                const SizedBox(height: 8),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                  child: Text(
+                                                    'URL: $url',
+                                                    style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           );
                                         },
                                         loadingBuilder: (context, child, loadingProgress) {
                                           if (loadingProgress == null) return child;
-                                          return const Center(
-                                            child: CircularProgressIndicator(),
-                                          );
+                                          return const Center(child: CircularProgressIndicator());
                                         },
                                       );
                                     },
                                   )
-                                : const Icon(
-                                    Icons.image_outlined,
-                                    size: 60,
-                                    color: Colors.grey,
+                                : Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.image_outlined, size: 60, color: Colors.grey),
+                                        const SizedBox(height: 8),
+                                        Text('No images available (${widget.product.imageUrls.length})', style: const TextStyle(color: Colors.grey)),
+                                      ],
+                                    ),
                                   ),
                           ),
                         ),

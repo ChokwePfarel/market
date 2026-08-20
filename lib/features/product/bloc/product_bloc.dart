@@ -81,6 +81,8 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         hasReachedMax: products.length < _limit,
         currentCategory: event.category,
       ));
+      
+      debugPrint('ProductBloc: Emitted ${allProducts.length} products. First product images: ${allProducts.isNotEmpty ? allProducts.first.imageUrls : 'N/A'}');
     } catch (e) {
       if (state is! ProductLoaded) {
         emit(ProductError(e.toString()));

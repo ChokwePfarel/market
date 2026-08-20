@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -290,7 +292,9 @@ class _ConversationTileState extends State<_ConversationTile>
                         color: const Color(0xFFFF4D6D).withOpacity(0.1),
                         image: conv.otherUser.profileImageUrl.isNotEmpty
                             ? DecorationImage(
-                                image: NetworkImage(conv.otherUser.profileImageUrl),
+                                image: conv.otherUser.profileImageUrl.startsWith('http')
+                                    ? NetworkImage(conv.otherUser.profileImageUrl)
+                                    : FileImage(File(conv.otherUser.profileImageUrl.replaceFirst('file://', ''))) as ImageProvider,
                                 fit: BoxFit.cover,
                               )
                             : null,

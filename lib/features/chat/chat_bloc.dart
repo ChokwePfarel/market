@@ -50,6 +50,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final combined = _merge(cachedMessages, queuedMessages);
       emit(ChatLoaded(messages: combined));
     } else {
+      // Avoid emitting loading if we already have something to show
       emit(ChatLoading());
     }
 
@@ -79,6 +80,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           .listen((message) => add(MessageReceived(message)));
           
     } catch (e) {
+      debugPrint('ChatBloc: Error loading messages: $e');
+      // Only emit error if we don't have cached messages
       if (state is! ChatLoaded) {
         emit(ChatError(e.toString()));
       }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -328,13 +330,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 profileUrl = state.user.profileImageUrl;
               }
 
+              final bool hasImage = profileUrl != null && profileUrl.isNotEmpty;
+              ImageProvider? imageProvider;
+              
+              if (hasImage) {
+                if (profileUrl!.startsWith('http')) {
+                  imageProvider = NetworkImage(profileUrl);
+                } else {
+                  imageProvider = FileImage(File(profileUrl.replaceFirst('file://', '')));
+                }
+              }
+
               return CircleAvatar(
                 radius: 23,
                 backgroundColor: const Color(0xFFF0E8F7),
-                backgroundImage: (profileUrl != null && profileUrl.isNotEmpty)
-                    ? NetworkImage(profileUrl)
-                    : null,
-                child: (profileUrl == null || profileUrl.isEmpty)
+                backgroundImage: imageProvider,
+                child: !hasImage
                     ? const Icon(Icons.person, color: Colors.black87, size: 25)
                     : null,
               );

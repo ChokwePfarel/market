@@ -147,6 +147,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         BlocListener<ImagesBloc, ImagesState>(
           listener: (context, state) {
             if (state is ImageOperationSuccess && state.image != null) {
+              debugPrint('AddProductScreen: Image uploaded. URL: ${state.image!.url}');
               _uploadedUrls.add(state.image!.url);
               final userState = context.read<UserBloc>().state;
               if (userState is UserLoaded) {

@@ -10,6 +10,7 @@ import '../auth/auth_state.dart';
 import '../user/user_bloc.dart';
 import '../user/user_event.dart';
 import '../user/user_state.dart';
+import 'full_image_page.dart';
 import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -144,28 +145,43 @@ class _ProfilePageState extends State<ProfilePage> {
                     onTap: _isEditing ? _pickImage : null,
                     child: Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 64,
-                          backgroundColor: Colors.grey[300],
-                          backgroundImage: _localImagePath != null
-                              ? FileImage(File(_localImagePath!))
-                              : (user.profileImageUrl.isNotEmpty
-                              ? (user.profileImageUrl.startsWith('http')
-                              ? NetworkImage(user.profileImageUrl)
-                          as ImageProvider
-                              : FileImage(
-                            File(user.profileImageUrl),
-                          ))
-                              : null),
-                          child:
-                          user.profileImageUrl.isEmpty &&
-                              _localImagePath == null
-                              ? Icon(
-                            Icons.person,
-                            size: 64,
-                            color: Colors.grey[600],
-                          )
-                              : null,
+                        GestureDetector(
+                          onTap: () {
+                            final imageToShow = _localImagePath ?? user.profileImageUrl;
+                            if (imageToShow.isEmpty) return;
+                            
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullImagePage(
+                                  imageUrl: imageToShow,
+                                ),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 64,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: _localImagePath != null
+                                ? FileImage(File(_localImagePath!.replaceFirst('file://', '')))
+                                : (user.profileImageUrl.isNotEmpty
+                                    ? (user.profileImageUrl.startsWith('http')
+                                        ? NetworkImage(user.profileImageUrl)
+                                            as ImageProvider
+                                        : FileImage(
+                                            File(user.profileImageUrl.replaceFirst('file://', '')),
+                                          ))
+                                    : null),
+                            child:
+                            user.profileImageUrl.isEmpty &&
+                                _localImagePath == null
+                                ? Icon(
+                              Icons.person,
+                              size: 64,
+                              color: Colors.grey[600],
+                            )
+                                : null,
+                          ),
                         ),
                         if (_isEditing)
                           Positioned(

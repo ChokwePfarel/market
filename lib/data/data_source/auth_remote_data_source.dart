@@ -1,5 +1,5 @@
-import 'package:hive_flutter/adapters.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/utils/offline_cache.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AuthResponse> signInWithEmailPassword(String email, String password);
@@ -56,7 +56,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> signOut() async {
     await client.auth.signOut();
-    await Hive.deleteFromDisk(); // wipes all boxes
+    await OfflineCache.clearAll(); // clears data without deleting/closing boxes
   }
 
   @override

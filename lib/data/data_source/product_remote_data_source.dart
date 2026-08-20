@@ -45,6 +45,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
+      debugPrint('ProductRemoteDataSource: Fetched ${response.length} products.');
+      if (response.isNotEmpty) {
+        debugPrint('ProductRemoteDataSource: First product raw data: ${response.first}');
+      }
+
       return (response as List)
           .map((json) => ProductModel.fromJson(json))
           .toList();
