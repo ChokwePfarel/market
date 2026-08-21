@@ -114,13 +114,7 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    'Online',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
-                  ),
+
                 ],
               ),
             ),
@@ -451,12 +445,7 @@ class _MessageInput extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(Icons.attach_file, color: Colors.grey[600]),
-            onPressed: () {
-              // Add attachment functionality
-            },
-          ),
+
           Expanded(
             child: TextField(
               controller: controller,
