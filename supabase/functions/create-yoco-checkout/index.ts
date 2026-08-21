@@ -47,8 +47,8 @@ serve(async (req) => {
     }
 
     // NEW: Wrap the YOCO redirect URL inside your verified domain's redirector
-    // Replace 'https://your-verified-domain.com/pay.html' with your actual hosted URL
-    const verifiedDomainPage = "https://walrlsavtbcyvqtegock.supabase.co/storage/v1/object/public/site/pay.html";
+    // Using your new verified domain: marketplaceapp.co.za
+    const verifiedDomainPage = "https://marketplaceapp.co.za/pay.html";
     const finalRedirectUrl = `${verifiedDomainPage}?url=${encodeURIComponent(data.redirectUrl)}`;
 
     return new Response(JSON.stringify({ redirectUrl: finalRedirectUrl }), {
