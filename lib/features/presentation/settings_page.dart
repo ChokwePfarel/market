@@ -174,7 +174,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _launchDelete() async {
-    const deleteUrl = 'https://market-sandy-omega.vercel.app/';
+    const deleteUrl = 'https://marketplaceapp.co.za/delete.html';
     final Uri uri = Uri.parse(deleteUrl);
 
     try {
