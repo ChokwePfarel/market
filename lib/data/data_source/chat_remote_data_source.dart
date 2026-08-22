@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
+
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -157,74 +159,103 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   @override
   Stream<MessageModel> subscribeToMessages(String conversationId) {
     final controller = StreamController<MessageModel>.broadcast();
+    debugPrint('ChatRemoteDataSource: Subscribing to messages for $conversationId');
 
-    _messagesChannel = client
-        .channel('messages:$conversationId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'conversation_id',
-            value: conversationId,
-          ),
-          callback: (payload) {
-            final message = MessageModel.fromJson(payload.newRecord);
-            controller.add(message);
-          },
-        )
-        .subscribe();
+    final channel = client.channel('public:messages:$conversationId');
+    
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.all, // Catch inserts and updates (for read status)
+      schema: 'public',
+      table: 'messages',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'conversation_id',
+        value: conversationId,
+      ),
+      callback: (payload) {
+        if (payload.newRecord.isNotEmpty) {
+          debugPrint('ChatRemoteDataSource: Realtime message event: ${payload.eventType}');
+          final message = MessageModel.fromJson(payload.newRecord);
+          controller.add(message);
+        }
+      },
+    ).subscribe((status, error) {
+      if (error != null) {
+        debugPrint('ChatRemoteDataSource: Realtime subscription error: $error');
+      }
+      debugPrint('ChatRemoteDataSource: Realtime subscription status: $status');
+    });
+
+    controller.onCancel = () {
+      debugPrint('ChatRemoteDataSource: Unsubscribing from messages for $conversationId');
+      client.removeChannel(channel);
+    };
 
     return controller.stream;
   }
 
-
+  @override
   Stream<ConversationModel> subscribeToConversations(String currentUserId) {
     final controller = StreamController<ConversationModel>.broadcast();
+    debugPrint('ChatRemoteDataSource: Subscribing to conversations for $currentUserId');
 
-    _conversationsChannel = client
-        .channel('conversations:$currentUserId')
-        .onPostgresChanges(
-      // Listen for ALL changes (INSERT, UPDATE, DELETE) to catch new chats
-      // and summary updates after deletions
+    final channel = client.channel('public:conversations:$currentUserId');
+
+    // We listen to changes on the conversations table
+    // Note: Ideally we'd filter by user_id, but PostgresChangeFilter only supports one column.
+    // So we listen to all and filter in the callback, OR we can use two channels.
+    // Listening to all and filtering is simpler since we fetch the full record anyway.
+    
+    channel.onPostgresChanges(
       event: PostgresChangeEvent.all,
       schema: 'public',
       table: 'conversations',
       callback: (payload) async {
         if (payload.newRecord.isEmpty) return;
 
-        final String conversationId = payload.newRecord['id'];
+        final String userOneId = payload.newRecord['user_one_id'];
+        final String userTwoId = payload.newRecord['user_two_id'];
 
-        try {
-          final updated = await client
-              .from('conversations')
-              .select('''
-                    *,
-                    user_one:profiles!conversations_user_one_id_fkey (
-                      id, full_name, profile_image_url, is_verified
-                    ),
-                    user_two:profiles!conversations_user_two_id_fkey (
-                      id, full_name, profile_image_url, is_verified
-                    ),
-                    messages (
-                      id, is_read, sender_id
-                    )
-                  ''')
-              .eq('id', conversationId)
-              .single();
+        // Only process if the current user is part of this conversation
+        if (userOneId == currentUserId || userTwoId == currentUserId) {
+          final String conversationId = payload.newRecord['id'];
+          debugPrint('ChatRemoteDataSource: Conversation update for $conversationId');
 
-          final messages = (updated['messages'] as List? ?? []);
-          final unreadCount = messages
-              .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
-              .length;
+          try {
+            final updated = await client
+                .from('conversations')
+                .select('''
+                      *,
+                      user_one:profiles!conversations_user_one_id_fkey (
+                        id, full_name, profile_image_url, is_verified
+                      ),
+                      user_two:profiles!conversations_user_two_id_fkey (
+                        id, full_name, profile_image_url, is_verified
+                      ),
+                      messages (
+                        id, is_read, sender_id
+                      )
+                    ''')
+                .eq('id', conversationId)
+                .single();
 
-          controller.add(ConversationModel.fromJson(updated, currentUserId, unreadCount));
-        } catch (e) {
+            final messages = (updated['messages'] as List? ?? []);
+            final unreadCount = messages
+                .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
+                .length;
+
+            controller.add(ConversationModel.fromJson(updated, currentUserId, unreadCount));
+          } catch (e) {
+            debugPrint('ChatRemoteDataSource: Error fetching updated conversation: $e');
+          }
         }
       },
-    )
-        .subscribe();
+    ).subscribe();
+
+    controller.onCancel = () {
+      debugPrint('ChatRemoteDataSource: Unsubscribing from conversations for $currentUserId');
+      client.removeChannel(channel);
+    };
 
     return controller.stream;
   }

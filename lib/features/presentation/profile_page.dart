@@ -3,6 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:market/core/utils/snackbar.dart';
 import 'package:market/features/presentation/settings_page.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_event.dart';
@@ -62,12 +65,41 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    
     if (pickedFile != null) {
-      setState(() {
-        _localImagePath = pickedFile.path;
-      });
+      final croppedFile = await _cropImage(pickedFile.path);
+      if (croppedFile != null) {
+        setState(() {
+          _localImagePath = croppedFile.path;
+        });
+      }
     }
+  }
+
+  Future<CroppedFile?> _cropImage(String path) async {
+    return await ImageCropper().cropImage(
+      sourcePath: path,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Square for avatar
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop Profile Picture',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.square,
+          lockAspectRatio: true,
+          activeControlsWidgetColor: Colors.black,
+        ),
+        IOSUiSettings(
+          title: 'Crop Profile Picture',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+        ),
+      ],
+    );
   }
 
   void _saveProfile() {
@@ -114,9 +146,9 @@ class _ProfilePageState extends State<ProfilePage> {
         listener: (context, state) {
           debugPrint('ProfilePage: UserBloc state changed to $state');
           if (state is UserError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+
+            AppSnackBar.error(context, 'No Network Connection');
+
           } else if (state is UserLoaded && !_isEditing) {
             debugPrint(
               'ProfilePage: Updating controllers with ${state.user.name}',
@@ -164,16 +196,16 @@ class _ProfilePageState extends State<ProfilePage> {
                             backgroundColor: Colors.grey[300],
                             backgroundImage: _localImagePath != null
                                 ? FileImage(File(_localImagePath!.replaceFirst('file://', '')))
-                                : (user.profileImageUrl.isNotEmpty
+                                : (user.profileImageUrl.isNotEmpty && !user.profileImageUrl.contains('com.example.market')
                                     ? (user.profileImageUrl.startsWith('http')
-                                        ? NetworkImage(user.profileImageUrl)
+                                        ? CachedNetworkImageProvider(user.profileImageUrl)
                                             as ImageProvider
                                         : FileImage(
                                             File(user.profileImageUrl.replaceFirst('file://', '')),
                                           ))
                                     : null),
                             child:
-                            user.profileImageUrl.isEmpty &&
+                            (user.profileImageUrl.isEmpty || user.profileImageUrl.contains('com.example.market')) &&
                                 _localImagePath == null
                                 ? Icon(
                               Icons.person,

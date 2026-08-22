@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/utils/snackbar.dart';
 import '../user/user_bloc.dart';
 import '../user/user_event.dart';
 import '../user/user_state.dart';
@@ -18,6 +23,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
   final _nameController = TextEditingController();
   String _selectedSex = 'Male';
   final List<String> sexes = ['Male', 'Female'];
+  String? _localImagePath;
   
   final List<String> universities = [
     "University of Cape Town",
@@ -53,16 +59,53 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (pickedFile != null) {
+      final croppedFile = await _cropImage(pickedFile.path);
+      if (croppedFile != null) {
+        setState(() {
+          _localImagePath = croppedFile.path;
+        });
+      }
+    }
+  }
+
+  Future<CroppedFile?> _cropImage(String path) async {
+    return await ImageCropper().cropImage(
+      sourcePath: path,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop Profile Picture',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.square,
+          lockAspectRatio: true,
+        ),
+        IOSUiSettings(
+          title: 'Crop Profile Picture',
+          aspectRatioLockEnabled: true,
+        ),
+      ],
+    );
+  }
+
   void _submit() {
     if (_formKey.currentState!.validate()) {
       context.read<UserBloc>().add(
         CreateUser(
           name: _nameController.text.trim(),
           sex: _selectedSex,
-          userType: 'student',
+          userType: 'Student',
           university: _selectedUniversity,
-          isVerified: true,
-          profileImageUrl: '',
+          isVerified: false,
+          profileImageUrl: /*_localImagePath ??*/ '', // We'll need to handle the upload in UserBloc if this is a local path
         ),
       );
     }
@@ -72,12 +115,12 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
+      /*appBar: AppBar(
         title: const Text('Setup Your Profile'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-      ),
+      ),*/
       body: BlocListener<UserBloc, UserState>(
         listener: (context, state) {
           if (state is UserLoaded) {
@@ -86,18 +129,47 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
               (route) => false,
             );
           } else if (state is UserError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            AppSnackBar.error(context, 'Something went wrong');
           }
         },
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: ListView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
+                /*Center(
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: _localImagePath != null
+                              ? FileImage(File(_localImagePath!))
+                              : null,
+                          child: _localImagePath == null
+                              ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),*/
                 const SizedBox(height: 32),
                 
                 TextFormField(
@@ -122,7 +194,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
 
                 DropdownButtonFormField<String>(
                   value: _selectedSex,
-                  decoration: InputDecoration(labelText: 'Sex',
+                  decoration: InputDecoration(labelText: 'Gender',
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Colors.black, width: 1.5),

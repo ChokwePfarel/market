@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:market/domain/entities/user_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -46,6 +47,26 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         throw Exception('Not signed in');
       }
 
+      String finalImageUrl = '';
+
+      // If profileImageUrl is a local file path, upload it
+      if (profileImageUrl.isNotEmpty && !profileImageUrl.startsWith('http')) {
+        debugPrint('UserRemoteDataSource: Uploading initial profile image...');
+        final file = File(profileImageUrl.replaceFirst('file://', ''));
+        if (await file.exists()) {
+          final path = '${user.id}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          await client.storage.from('user-images').upload(
+                path,
+                file,
+                fileOptions: const FileOptions(upsert: true),
+              );
+          finalImageUrl = client.storage.from('user-images').getPublicUrl(path);
+          debugPrint('UserRemoteDataSource: Initial upload successful. URL: $finalImageUrl');
+        }
+      } else {
+        finalImageUrl = profileImageUrl;
+      }
+
       final Map<String, dynamic> updates = {
         'id': user.id,
         'full_name': name,
@@ -54,7 +75,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         'has_free_trial': true,
         'university': university,
         'is_verified': isVerified,
-        'profile_image_url': profileImageUrl,
+        'profile_image_url': finalImageUrl,
         'is_profile_completed': true,
       };
 
@@ -109,7 +130,20 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       String? profileImageUrl = user.profileImageUrl;
 
       if (localImagePath != null) {
-        // TODO: Implement actual storage upload
+        debugPrint('UserRemoteDataSource: Uploading new profile image...');
+        final file = File(localImagePath.replaceFirst('file://', ''));
+        if (await file.exists()) {
+          final path = '${user.id}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          await client.storage.from('user-images').upload(
+                path,
+                file,
+                fileOptions: const FileOptions(upsert: true),
+              );
+          profileImageUrl = client.storage.from('user-images').getPublicUrl(path);
+          debugPrint('UserRemoteDataSource: Upload successful. New URL: $profileImageUrl');
+        } else {
+          debugPrint('UserRemoteDataSource: Local file not found: ${file.path}');
+        }
       }
 
       final updatedData = user.toJson();
@@ -119,12 +153,12 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       updatedData.remove('has_free_trial');
       updatedData.remove('sex');
 
-      if (profileImageUrl != user.profileImageUrl) {
-        updatedData['profile_image_url'] = profileImageUrl;
-      }
+      // Update with the REAL remote URL, not the local path
+      updatedData['profile_image_url'] = profileImageUrl;
 
       await client.from('profiles').update(updatedData).eq('id', user.id);
     } catch (e) {
+      debugPrint('UserRemoteDataSource: Error updating profile: $e');
       throw Exception('Failed to update user profile: $e');
     }
   }

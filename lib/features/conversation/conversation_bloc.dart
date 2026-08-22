@@ -26,24 +26,30 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     LoadConversations event,
     Emitter<ConversationsState> emit,
   ) async {
+    final currentState = state;
+    
+    // 1. Show cached data immediately if we aren't already showing data
     final cached = OfflineCache.getCachedConversations(event.currentUserId);
-    if (cached.isNotEmpty) {
+    if (currentState is! ConversationsLoaded && cached.isNotEmpty) {
       emit(ConversationsLoaded(conversations: cached, unreadCount: 0));
-    } else {
+    } else if (currentState is! ConversationsLoaded) {
       emit(ConversationsLoading());
     }
 
     try {
+      // 2. Fetch fresh data from server
       final conversations =
           await _chatRepository.getConversations(event.currentUserId);
       final unreadCount =
           await _chatRepository.getUnreadCount(event.currentUserId);
 
+      // 3. Update cache
       final models = conversations.whereType<ConversationModel>().toList();
       if (models.isNotEmpty) {
         await OfflineCache.cacheConversations(event.currentUserId, models);
       }
 
+      // 4. Emit fresh data
       emit(
         ConversationsLoaded(
           conversations: conversations,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:market/features/presentation/resert_password_request.dart';
 
+import '../../core/utils/snackbar.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_event.dart';
 import '../auth/auth_state.dart';
@@ -51,8 +52,10 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+            AppSnackBar.show(
+              context,
+              'Incorrect email or password',
+              type: SnackBarType.warning,
             );
           }
           // Note: We no longer handle navigation here. 

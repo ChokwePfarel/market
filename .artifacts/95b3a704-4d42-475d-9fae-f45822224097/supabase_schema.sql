@@ -266,3 +266,22 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql;
+
+-- AUTOMATION: Auto-update has_free_trial to false after first active listing
+CREATE OR REPLACE FUNCTION public.consume_free_trial()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If the new product is active, mark the user's free trial as used
+  IF NEW.status = 'active' THEN
+    UPDATE public.profiles
+    SET has_free_trial = FALSE
+    WHERE id = NEW.seller_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_product_listed
+AFTER INSERT ON public.products
+FOR EACH ROW
+EXECUTE FUNCTION public.consume_free_trial();

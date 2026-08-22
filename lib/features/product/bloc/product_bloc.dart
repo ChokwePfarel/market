@@ -30,13 +30,15 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     final currentState = state;
 
-    if (event.isRefresh) {
+    // Only emit loading if we don't have existing products to show
+    if (event.isRefresh && currentState is! ProductLoaded) {
       emit(ProductLoading());
     }
 
     final cacheKey = '${event.university}_${event.category}';
     final cached = OfflineCache.getCachedProducts(cacheKey);
 
+    // If initial load and we have cache, show it immediately
     if (currentState is! ProductLoaded && cached.isNotEmpty) {
       emit(ProductLoaded(
         products: cached,
@@ -45,6 +47,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       ));
     }
 
+    // Optimization: avoid redundant fetches for the same category if already reached max
     if (currentState is ProductLoaded &&
         currentState.hasReachedMax &&
         !event.isRefresh &&
@@ -84,6 +87,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       
       debugPrint('ProductBloc: Emitted ${allProducts.length} products. First product images: ${allProducts.isNotEmpty ? allProducts.first.imageUrls : 'N/A'}');
     } catch (e) {
+      debugPrint('ProductBloc: Error fetching products: $e');
       if (state is! ProductLoaded) {
         emit(ProductError(e.toString()));
       }
@@ -97,13 +101,15 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     debugPrint('ProductBloc: _onAddProduct started for ${event.name}');
     emit(ProductLoading());
     try {
-      debugPrint('ProductBloc: Checking user product count for ${event.sellerId}...');
-      final count = await _productRepository.getUserProductCount(event.sellerId);
-      debugPrint('ProductBloc: Current product count: $count');
+      debugPrint('ProductBloc: Fetching user profile to check free trial status...');
+      final user = await _userRepository.getUserProfile(event.sellerId);
+      final bool hasFreeTrial = user.hasFreeTrial;
+      debugPrint('ProductBloc: User has free trial: $hasFreeTrial');
 
       final productId = const Uuid().v4();
-      final String status = (count == 0) ? 'active' : 'pending_payment';
-      debugPrint('ProductBloc: New product ID: $productId, target status: $status');
+      // Use the boolean flag as the source of truth
+      final String status = hasFreeTrial ? 'active' : 'pending_payment';
+      debugPrint('ProductBloc: Generated Product ID: $productId, target status: $status');
 
       final product = ProductEntity(
         id: productId,
@@ -124,16 +130,15 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
       if (status == 'active') {
         debugPrint('ProductBloc: status is active. User repository: $_userRepository');
-        debugPrint('ProductBloc: User repository type: ${_userRepository.runtimeType}');
         
         debugPrint('ProductBloc: Flipping has_free_trial to false for ${event.sellerId}');
         
         try {
+          // Double-check: immediately flip the trial flag so they can't list another one for free
           await _userRepository.updateFreeTrialStatus(event.sellerId, false);
           debugPrint('ProductBloc: updateFreeTrialStatus successful.');
         } catch (updateError) {
           debugPrint('ProductBloc: updateFreeTrialStatus failed: $updateError');
-          // We don't fail the whole product creation just for the trial flip
         }
         
         debugPrint('ProductBloc: Emitting ProductAddedSuccess');

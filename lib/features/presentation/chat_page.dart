@@ -1,12 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../chat/chat_bloc.dart';
 import '../chat/chat_event.dart';
 import '../chat/chat_state.dart';
+import '../conversation/conversation_bloc.dart';
+import '../conversation/conversation_event.dart';
 import '../user/user_bloc.dart';
 import '../user/user_state.dart';
+import 'full_image_page.dart';
 
 class ChatPage extends StatefulWidget {
   final ConversationEntity conversation;
@@ -26,6 +32,11 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
+    
+    // Set this conversation as active to clear unread badges in the inbox instantly
+    context.read<ConversationsBloc>().add(
+      SetActiveConversation(widget.conversation.id),
+    );
   }
 
   @override
@@ -33,6 +44,10 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
+    
+    // Clear the active conversation so future background messages trigger badges again
+    context.read<ConversationsBloc>().add(SetActiveConversation(null));
+    
     super.dispose();
   }
 
@@ -77,6 +92,55 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  Widget _buildAvatar(String url, {double size = 40}) {
+    if (url.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+      );
+    }
+
+    if (url.startsWith('http')) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: CachedNetworkImageProvider(url),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    final cleanPath = url.replaceFirst('file://', '').replaceFirst('file:/', '');
+    final file = File(cleanPath);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+      child: FutureBuilder<bool>(
+        future: file.exists(),
+        builder: (context, snapshot) {
+          if (snapshot.data == true) {
+            return ClipOval(
+              child: Image.file(
+                file,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+              ),
+            );
+          }
+          return Icon(Icons.person, color: Colors.grey, size: size * 0.6);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,15 +154,20 @@ class _ChatPageState extends State<ChatPage> {
         ),
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.grey[200],
-              backgroundImage: widget.conversation.otherUser.profileImageUrl.isNotEmpty
-                  ? NetworkImage(widget.conversation.otherUser.profileImageUrl)
-                  : null,
-              child: widget.conversation.otherUser.profileImageUrl.isEmpty
-                  ? Icon(Icons.person, color: Colors.grey[600], size: 20)
-                  : null,
+            GestureDetector(
+              onTap: () {
+                if (widget.conversation.otherUser.profileImageUrl.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullImagePage(
+                        imageUrl: widget.conversation.otherUser.profileImageUrl,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: _buildAvatar(widget.conversation.otherUser.profileImageUrl, size: 40),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -114,20 +183,12 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
-
                 ],
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {
-              // Add more options if needed
-            },
-          ),
-        ],
+
       ),
       body: Column(
         children: [
@@ -169,6 +230,7 @@ class _ChatPageState extends State<ChatPage> {
                       return _MessageBubble(
                         message: message,
                         isMe: isMe,
+                        otherUserImageUrl: widget.conversation.otherUser.profileImageUrl,
                       );
                     },
                   );
@@ -248,10 +310,12 @@ class _ChatPageState extends State<ChatPage> {
 class _MessageBubble extends StatelessWidget {
   final MessageEntity message;
   final bool isMe;
+  final String otherUserImageUrl;
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
+    required this.otherUserImageUrl,
   });
 
   @override
@@ -264,15 +328,7 @@ class _MessageBubble extends StatelessWidget {
           if (!isMe)
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
-              child: CircleAvatar(
-                radius: 14,
-                backgroundColor: Colors.grey[300],
-                child: const Icon(
-                  Icons.person,
-                  size: 14,
-                  color: Colors.black,
-                ),
-              ),
+              child: _buildAvatar(otherUserImageUrl, size: 28),
             ),
           Flexible(
             child: Container(
@@ -326,6 +382,67 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String url, {double size = 40}) {
+    if (url.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+      );
+    }
+
+    if (url.startsWith('http')) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: CachedNetworkImageProvider(url),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    final String cleanPath = url.replaceFirst('file://', '').replaceFirst('file:/', '');
+
+    // SAFETY: If the path belongs to the old package name, it's dead. Ignore it.
+    if (cleanPath.contains('com.example.market')) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+      );
+    }
+
+    final file = File(cleanPath);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+      child: FutureBuilder<bool>(
+        future: file.exists(),
+        builder: (context, snapshot) {
+          if (snapshot.data == true) {
+            return ClipOval(
+              child: Image.file(
+                file,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+              ),
+            );
+          }
+          return Icon(Icons.person, color: Colors.grey, size: size * 0.6);
+        },
       ),
     );
   }

@@ -1,10 +1,10 @@
-
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../domain/entities/conversation_entity.dart';
 import '../conversation/conversation_bloc.dart';
@@ -41,7 +41,7 @@ class InboxPage extends StatefulWidget {
 class _InboxPageState extends State<InboxPage>
     with SingleTickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
-  final String _query = '';
+  String _query = '';
 
   late final _fadeCtrl = AnimationController(
     vsync: this,
@@ -76,6 +76,7 @@ class _InboxPageState extends State<InboxPage>
       body: FadeTransition(
         opacity: _fadeCtrl,
         child: RefreshIndicator(
+          color: Colors.black,
           displacement: 100,
           onRefresh: () async {
             context.read<ConversationsBloc>().add(LoadConversations(widget.currentUserId));
@@ -88,7 +89,11 @@ class _InboxPageState extends State<InboxPage>
                 builder: (context, state) {
                   if (state is ConversationsLoading) {
                     return const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                        ),
+                      ),
                     );
                   }
 
@@ -98,11 +103,14 @@ class _InboxPageState extends State<InboxPage>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                            const SizedBox(height: 16),
                             Text('Error: ${state.message}'),
                             const SizedBox(height: 12),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                               onPressed: () => context.read<ConversationsBloc>().add(LoadConversations(widget.currentUserId)),
-                              child: const Text('Retry'),
+                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -114,9 +122,7 @@ class _InboxPageState extends State<InboxPage>
                     return _buildList(state.conversations);
                   }
 
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
                 },
               ),
             ],
@@ -126,30 +132,51 @@ class _InboxPageState extends State<InboxPage>
     );
   }
 
-  // ── AppBar ─────────────────────────────────────────────────────────────────
-
   SliverAppBar _buildAppBar() {
     return SliverAppBar(
       backgroundColor: Colors.white,
       elevation: 0,
       pinned: true,
+      centerTitle: false,
       title: const Text(
         'Chats',
         style: TextStyle(
-          fontSize: 22,
+          fontSize: 24,
           fontWeight: FontWeight.w800,
           color: Color(0xFF1A1A2E),
           letterSpacing: -0.5,
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: const Color(0xFFEEEEF4)),
+        preferredSize: const Size.fromHeight(60),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F1F5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (val) => setState(() => _query = val),
+                  decoration: const InputDecoration(
+                    hintText: 'Search conversations...',
+                    prefixIcon: Icon(Icons.search, size: 20),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+            ),
+            Container(height: 0.5, color: const Color(0xFFEEEEF4)),
+          ],
+        ),
       ),
     );
   }
-
-  // ── List ───────────────────────────────────────────────────────────────────
 
   Widget _buildList(List<ConversationEntity> all) {
     final filtered = _filter(all);
@@ -188,8 +215,6 @@ class _InboxPageState extends State<InboxPage>
     );
   }
 
-  // ── Empty ──────────────────────────────────────────────────────────────────
-
   Widget _buildEmpty() {
     return Center(
       child: Column(
@@ -207,7 +232,7 @@ class _InboxPageState extends State<InboxPage>
           ),
           const SizedBox(height: 8),
           Text(
-            'Visit someone\'s profile and\nstart a conversation',
+            'Start a conversation with a seller\nto see your messages here.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -220,8 +245,6 @@ class _InboxPageState extends State<InboxPage>
     );
   }
 }
-
-// ─── Conversation Tile ────────────────────────────────────────────────────────
 
 class _ConversationTile extends StatefulWidget {
   final ConversationEntity conversation;
@@ -281,58 +304,27 @@ class _ConversationTileState extends State<_ConversationTile>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                // ── Avatar ─────────────────────────────────────────────────
                 Stack(
                   children: [
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFF4D6D).withOpacity(0.1),
-                        image: conv.otherUser.profileImageUrl.isNotEmpty
-                            ? DecorationImage(
-                                image: conv.otherUser.profileImageUrl.startsWith('http')
-                                    ? NetworkImage(conv.otherUser.profileImageUrl)
-                                    : FileImage(File(conv.otherUser.profileImageUrl.replaceFirst('file://', ''))) as ImageProvider,
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                        border: Border.all(
-                          color: const Color(0xFFFF4D6D).withOpacity(0.2),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: conv.otherUser.profileImageUrl.isEmpty
-                          ? const Center(
-                              child: Text('👤', style: TextStyle(fontSize: 22)),
-                            )
-                          : null,
-                    ),
+                    _buildAvatar(conv.otherUser.profileImageUrl),
                     if (conv.otherUser.isVerified)
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          width: 16,
-                          height: 16,
+                          width: 18,
+                          height: 18,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2EC4B6),
+                            color: Colors.blue,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: const Icon(
-                            CupertinoIcons.checkmark_alt,
-                            size: 9,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.check, size: 10, color: Colors.white),
                         ),
                       ),
                   ],
                 ),
                 const SizedBox(width: 14),
-
-                // ── Content ────────────────────────────────────────────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,70 +335,122 @@ class _ConversationTileState extends State<_ConversationTile>
                             child: Text(
                               conv.otherUser.name,
                               style: TextStyle(
-                                fontSize:   15,
-                                fontWeight: conv.unreadCount > 0
-                                    ? FontWeight.w800
-                                    : FontWeight.w700,
+                                fontSize: 16,
+                                fontWeight: conv.unreadCount > 0 ? FontWeight.w800 : FontWeight.w700,
                                 color: const Color(0xFF1A1A2E),
                               ),
                             ),
                           ),
-                          Row(
-                            children: [
-                              if (conv.unreadCount > 0)
-                                Container(
-                                  margin: const EdgeInsets.only(right: 6),
-                                  width:  8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color:  Color(0xFFFF4D6D),
-                                    shape:  BoxShape.circle,
-                                  ),
-                                ),
-                              Text(
-                                _timeAgo(conv.lastMessageAt),
-                                style: TextStyle(
-                                  fontSize:   12,
-                                  fontWeight: conv.unreadCount > 0
-                                      ? FontWeight.w800
-                                      : FontWeight.w500,
-                                  color: conv.unreadCount > 0
-                                      ? const Color(0xFFFF4D6D)
-                                      : Colors.grey.shade400,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            _timeAgo(conv.lastMessageAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: conv.unreadCount > 0 ? FontWeight.w800 : FontWeight.w500,
+                              color: conv.unreadCount > 0 ? Colors.blue : Colors.grey.shade400,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        conv.lastMessage ?? 'Say hello 👋',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: conv.lastMessage != null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade400,
-                          fontStyle: conv.lastMessage == null
-                              ? FontStyle.italic
-                              : FontStyle.normal,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              conv.lastMessage ?? 'Start a conversation',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: conv.unreadCount > 0 ? Colors.black87 : Colors.grey.shade600,
+                                fontWeight: conv.unreadCount > 0 ? FontWeight.w600 : FontWeight.w400,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (conv.unreadCount > 0)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                conv.unreadCount.toString(),
+                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
-                  CupertinoIcons.chevron_right,
-                  size: 14,
-                  color: Color(0xFFCCCCDD),
-                ),
+                const Icon(Icons.chevron_right, size: 20, color: Color(0xFFCCCCDD)),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String url) {
+    if (url.isEmpty) {
+      return Container(
+        width: 58,
+        height: 54,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        child: const Icon(Icons.person, color: Colors.grey, size: 28),
+      );
+    }
+
+    if (url.startsWith('http')) {
+      return Container(
+        width: 58,
+        height: 54,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: CachedNetworkImageProvider(url),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    // Local file path handling with existence check
+    final String cleanPath = url.replaceFirst('file://', '').replaceFirst('file:/', '');
+    
+    // SAFETY: If the path belongs to the old package name, it's dead. Ignore it.
+    if (cleanPath.contains('com.example.market')) {
+      return Container(
+        width: 58,
+        height: 54,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        child: const Icon(Icons.person, color: Colors.grey, size: 28),
+      );
+    }
+
+    final file = File(cleanPath);
+
+    return Container(
+      width: 58,
+      height: 54,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+      child: FutureBuilder<bool>(
+        future: file.exists(),
+        builder: (context, snapshot) {
+          if (snapshot.data == true) {
+            return ClipOval(
+              child: Image.file(
+                file,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.grey),
+              ),
+            );
+          }
+          return const Icon(Icons.person, color: Colors.grey);
+        },
       ),
     );
   }

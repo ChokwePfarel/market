@@ -198,6 +198,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     final List<MessageEntity> updated = List.from(current.messages);
 
+    // 1. Handle potential temp message removal
     bool removedTemp = false;
     updated.removeWhere((m) {
       if (!removedTemp &&
@@ -210,13 +211,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return false;
     });
 
-    if (!updated.any((m) => m.id == event.message.id)) {
+    // 2. Add or UPDATE the message in the list
+    final existingIndex = updated.indexWhere((m) => m.id == event.message.id);
+    if (existingIndex != -1) {
+      debugPrint('ChatBloc: Updating existing message: ${event.message.id}');
+      updated[existingIndex] = event.message;
+    } else {
+      debugPrint('ChatBloc: Adding new message: ${event.message.id}');
       updated.add(event.message);
     }
 
     updated.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     emit(current.copyWith(messages: updated));
 
+    // 3. Mark as read logic
     if (_currentUserId != null && _conversationId != null && event.message.senderId != _currentUserId) {
        _chatRepository.markAsRead(_conversationId!, _currentUserId!);
     }

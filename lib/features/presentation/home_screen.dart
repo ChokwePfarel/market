@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
@@ -45,28 +46,30 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // Trigger initial fetch if user is already loaded
+    // Trigger initial fetch only if data isn't already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final productBloc = context.read<ProductBloc>();
       final userState = context.read<UserBloc>().state;
+      
       if (userState is UserLoaded) {
-        context.read<ProductBloc>().add(
-          FetchProducts(
-            university: userState.user.university,
-            category: _selectedCategory,
-            isRefresh: true,
-          ),
-        );
+        if (productBloc.state is ProductInitial) {
+          debugPrint('HomeScreen: Initial fetch for ${userState.user.university}');
+          productBloc.add(
+            FetchProducts(
+              university: userState.user.university,
+              category: _selectedCategory,
+              isRefresh: true,
+            ),
+          );
+        } else {
+          debugPrint('HomeScreen: Data already exists in Bloc, skipping full refresh');
+        }
+        
         context.read<ConversationsBloc>().add(
           LoadConversations(userState.user.id),
         );
-
-        debugPrint('HomeScreen: User loaded, starting initial fetch');
-        debugPrint('User Id: ${userState.user.id}');
       } else {
-        // Not loaded yet — BlocListener will handle it when UserLoaded arrives
-        // but make sure the subscription is running
         context.read<UserBloc>().add(const WatchCurrentUser());
-        debugPrint('HomeScreen: User not loaded yet');
       }
     });
   }
@@ -160,8 +163,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Expanded(
               child: BlocListener<UserBloc, UserState>(
+                listenWhen: (previous, current) {
+                  // Only re-fetch if university has changed or if we just logged in
+                  if (previous is! UserLoaded && current is UserLoaded) return true;
+                  if (previous is UserLoaded && current is UserLoaded) {
+                    return previous.user.university != current.user.university;
+                  }
+                  return false;
+                },
                 listener: (context, state) {
                   if (state is UserLoaded) {
+                    debugPrint('HomeScreen: User university changed to ${state.user.university}, refreshing...');
                     context.read<ProductBloc>().add(
                       FetchProducts(
                         university: state.user.university,
@@ -335,9 +347,11 @@ class _HomeScreenState extends State<HomeScreen> {
               
               if (hasImage) {
                 if (profileUrl!.startsWith('http')) {
-                  imageProvider = NetworkImage(profileUrl);
+                  imageProvider = CachedNetworkImageProvider(profileUrl!);
                 } else {
-                  imageProvider = FileImage(File(profileUrl.replaceFirst('file://', '')));
+                  imageProvider = FileImage(
+                    File(profileUrl.replaceFirst('file://', '').replaceFirst('file:/', '')),
+                  );
                 }
               }
 
@@ -412,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(12),
           ),
           icon: const Icon(
-            CupertinoIcons.bag_fill,
+            CupertinoIcons.bag,
             size: 25,
             color: Colors.black87,
           ),
@@ -518,17 +532,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 color: const Color(0xFFF4F4F4),
                 child: product.imageUrls.isNotEmpty
-                    ? Image.network(
-                        product.imageUrls.first,
+                    ? CachedNetworkImage(
+                        imageUrl: product.imageUrls.first,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.image_outlined,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
-                          );
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        errorWidget: (context, url, error) {
+                          debugPrint('HomeScreen: Error loading image: $error');
+                          return const Icon(Icons.broken_image, color: Colors.grey);
                         },
                       )
                     : const Center(

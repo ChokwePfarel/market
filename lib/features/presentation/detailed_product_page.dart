@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/product_entity.dart';
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
@@ -85,10 +86,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     itemBuilder: (context, index) {
                                       final url = widget.product.imageUrls[index];
                                       debugPrint('ProductDetails: Loading image $index: $url');
-                                      return Image.network(
-                                        url,
+                                      return CachedNetworkImage(
+                                        imageUrl: url,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        placeholder: (context, url) => const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                        errorWidget: (context, url, error) {
                                           debugPrint('ProductDetails: Error loading image: $error');
                                           return Center(
                                             child: Column(
@@ -109,10 +113,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                               ],
                                             ),
                                           );
-                                        },
-                                        loadingBuilder: (context, child, loadingProgress) {
-                                          if (loadingProgress == null) return child;
-                                          return const Center(child: CircularProgressIndicator());
                                         },
                                       );
                                     },

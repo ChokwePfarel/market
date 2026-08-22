@@ -13,6 +13,27 @@ class OfflineCache {
   static const String _productsBox = 'products';
   static const String _queueBox = 'message_queue';
 
+  /// Hive deserialises nested maps as Map<dynamic, dynamic>.
+  /// This recursively casts any map/list structure to Map<String, dynamic>
+  /// so every fromJson factory receives the type it expects.
+  static Map<String, dynamic> _deepCast(dynamic raw) {
+    if (raw is! Map) return {};
+    final map = Map<String, dynamic>.from(raw);
+    return map.map((key, value) {
+      if (value is Map) return MapEntry(key, _deepCast(value));
+      if (value is List) return MapEntry(key, _deepCastList(value));
+      return MapEntry(key, value);
+    });
+  }
+
+  static List<dynamic> _deepCastList(List raw) {
+    return raw.map((item) {
+      if (item is Map) return _deepCast(item);
+      if (item is List) return _deepCastList(item);
+      return item;
+    }).toList();
+  }
+
   static Future<void> init() async {
     try {
       await Hive.initFlutter();
@@ -49,7 +70,7 @@ class OfflineCache {
     final box = Hive.box(_messagesBox);
     final List? data = box.get(conversationId);
     if (data == null) return [];
-    return data.map((e) => MessageModel.fromJson(Map<String, dynamic>.from(e))).toList();
+    return data.map((e) => MessageModel.fromJson(_deepCast(e))).toList();
   }
 
   static Future<void> cacheMessageHistory(String conversationId, List<MessageModel> messages) async {
@@ -102,17 +123,18 @@ class OfflineCache {
   static List<ConversationEntity> getCachedConversations(String userId) {
     if (!Hive.isBoxOpen(_conversationsBox)) return [];
     final box = Hive.box(_conversationsBox);
-    final List? data = box.get(userId);
+    final List? data = box.get('inbox_$userId');
     if (data == null) return [];
-    // Note: unreadCount isn't stored here easily without extra logic
-    return data.map((e) => ConversationModel.fromJson(Map<String, dynamic>.from(e), userId)).toList();
+    return data
+        .map((json) => ConversationModel.fromJson(_deepCast(json), userId))
+        .toList();
   }
 
   static Future<void> cacheConversations(String userId, List<ConversationModel> conversations) async {
     await _openBoxes();
     final box = Hive.box(_conversationsBox);
     final data = conversations.map((c) => c.toJson()).toList();
-    await box.put(userId, data);
+    await box.put('inbox_$userId', data);
   }
 
   // ─── Products ─────────────────────────────────────────────────────────────
