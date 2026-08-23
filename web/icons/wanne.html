@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10070c" />
+    <title>Through Every Storm ❤️</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+          --bg: #090507;
+          --bg-soft: #140a10;
+          --rose: #f6b8c8;
+          --rose-soft: #e9a5b9;
+          --cream: #f9edf0;
+          --muted: #c8aeb7;
+          --line: rgba(255, 205, 220, .13);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+          min-height: 100vh;
+          color: var(--cream);
+          font-family: Inter, sans-serif;
+          background:
+            radial-gradient(circle at 15% 10%, rgba(116, 35, 65, .24), transparent 32%),
+            radial-gradient(circle at 85% 70%, rgba(100, 31, 57, .16), transparent 35%),
+            linear-gradient(135deg, #080406, #13080e 52%, #080406);
+          overflow-x: hidden;
+        }
+
+        body::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px);
+          background-size: 100% 5px;
+          opacity: .18;
+          z-index: 20;
+        }
+
+        .particles {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+          z-index: 0;
+        }
+
+        .particle {
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #ffdce7;
+          box-shadow: 0 0 18px rgba(255, 180, 205, .8);
+          animation: rise linear infinite;
+          opacity: .15;
+        }
+
+        @keyframes rise {
+          from { transform: translateY(110vh) scale(.4); }
+          to { transform: translateY(-15vh) scale(1.2); }
+        }
+
+        .page {
+          position: relative;
+          z-index: 1;
+          width: min(980px, calc(100% - 30px));
+          margin: auto;
+        }
+
+        .hero {
+          min-height: 92vh;
+          display: grid;
+          place-items: center;
+          text-align: center;
+          padding: 70px 20px 45px;
+        }
+
+        .eyebrow {
+          color: var(--rose);
+          font-size: .72rem;
+          letter-spacing: 5px;
+          text-transform: uppercase;
+          margin-bottom: 24px;
+        }
+
+        .hero h1 {
+          font-family: "Great Vibes", cursive;
+          font-size: clamp(4rem, 12vw, 8rem);
+          line-height: .85;
+          font-weight: 400;
+          color: #f9dce5;
+          text-shadow: 0 0 55px rgba(245, 140, 174, .18);
+        }
+
+        .hero h2 {
+          margin-top: 26px;
+          font-family: "Cormorant Garamond", serif;
+          font-weight: 400;
+          font-size: clamp(1.45rem, 4vw, 2.2rem);
+          letter-spacing: 2px;
+          color: #e8cdd5;
+        }
+
+        .hero p {
+          max-width: 620px;
+          margin: 25px auto 0;
+          color: var(--muted);
+          line-height: 1.9;
+          font-weight: 300;
+          font-size: 1rem;
+        }
+
+        .scroll {
+          margin-top: 55px;
+          color: #b995a2;
+          font-size: .7rem;
+          letter-spacing: 4px;
+          text-transform: uppercase;
+          animation: breathe 2.8s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+          50% { opacity: .35; transform: translateY(5px); }
+        }
+
+        .section {
+          padding: 75px 0;
+        }
+
+        .section-title {
+          text-align: center;
+          margin-bottom: 35px;
+        }
+
+        .section-title .small {
+          color: var(--rose);
+          text-transform: uppercase;
+          letter-spacing: 4px;
+          font-size: .68rem;
+          margin-bottom: 10px;
+        }
+
+        .section-title h3 {
+          font-family: "Cormorant Garamond", serif;
+          font-size: clamp(2.2rem, 6vw, 3.4rem);
+          font-weight: 400;
+        }
+
+        .memory {
+          background: rgba(19, 9, 14, .62);
+          border: 1px solid var(--line);
+          border-radius: 34px;
+          padding: 18px;
+          box-shadow: 0 35px 80px rgba(0,0,0,.48);
+          backdrop-filter: blur(18px);
+        }
+
+        .slideshow {
+          position: relative;
+          aspect-ratio: 16 / 10;
+          min-height: 380px;
+          overflow: hidden;
+          border-radius: 25px;
+          background: #12080d;
+        }
+
+        .slide {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          transform: scale(1.045);
+          transition: opacity 1.2s ease, transform 6s ease;
+          background-position: center;
+          background-size: cover;
+        }
+
+        .slide.active {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .slide::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(to top, rgba(7,3,6,.72), transparent 48%),
+            linear-gradient(to right, rgba(8,3,6,.2), transparent);
+        }
+
+        .caption {
+          position: absolute;
+          z-index: 4;
+          left: 50%;
+          bottom: 27px;
+          transform: translateX(-50%);
+          width: min(90%, 700px);
+          text-align: center;
+          font-family: "Great Vibes", cursive;
+          font-size: clamp(1.8rem, 5vw, 2.7rem);
+          color: white;
+          text-shadow: 0 3px 25px #000;
+        }
+
+        .controls {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 16px;
+          margin-top: 20px;
+        }
+
+        .arrow {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: 1px solid var(--line);
+          background: rgba(255,255,255,.035);
+          color: var(--rose);
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: .3s ease;
+        }
+
+        .arrow:hover {
+          background: rgba(246,184,200,.12);
+          transform: scale(1.08);
+        }
+
+        .dots {
+          display: flex;
+          gap: 7px;
+          justify-content: center;
+        }
+
+        .dot {
+          width: 7px;
+          height: 7px;
+          border: 0;
+          border-radius: 10px;
+          background: rgba(255,210,225,.25);
+          cursor: pointer;
+          transition: .35s ease;
+        }
+
+        .dot.active {
+          width: 27px;
+          background: var(--rose);
+          box-shadow: 0 0 15px rgba(246,184,200,.5);
+        }
+
+        .story {
+          max-width: 760px;
+          margin: auto;
+          text-align: center;
+        }
+
+        .story-card {
+          position: relative;
+          padding: 55px clamp(25px, 7vw, 75px);
+          border: 1px solid var(--line);
+          border-radius: 34px;
+          background: linear-gradient(145deg, rgba(35,13,22,.68), rgba(12,6,9,.72));
+          box-shadow: 0 35px 80px rgba(0,0,0,.35);
+        }
+
+        .story-card::before {
+          content: "“";
+          position: absolute;
+          top: 15px;
+          left: 28px;
+          font-family: Georgia, serif;
+          font-size: 7rem;
+          color: rgba(246,184,200,.09);
+        }
+
+        .story-card p {
+          font-family: "Cormorant Garamond", serif;
+          font-size: clamp(1.25rem, 3vw, 1.65rem);
+          line-height: 1.8;
+          color: #ead8de;
+          margin-bottom: 22px;
+        }
+
+        .story-card .emphasis {
+          font-family: "Great Vibes", cursive;
+          font-size: clamp(2.3rem, 6vw, 3.6rem);
+          line-height: 1.2;
+          color: var(--rose);
+          margin: 32px 0;
+        }
+
+        .story-card .final {
+          color: #f8e7eb;
+          margin-bottom: 0;
+        }
+
+        .promise {
+          text-align: center;
+          padding: 110px 20px 120px;
+        }
+
+        .promise .heart {
+          font-size: 2rem;
+          display: inline-block;
+          animation: heartbeat 1.8s infinite;
+          margin-bottom: 22px;
+        }
+
+        @keyframes heartbeat {
+          0%, 100% { transform: scale(1); }
+          12% { transform: scale(1.18); }
+          24% { transform: scale(1); }
+          36% { transform: scale(1.12); }
+        }
+
+        .promise h3 {
+          font-family: "Great Vibes", cursive;
+          font-size: clamp(3.2rem, 9vw, 5.8rem);
+          font-weight: 400;
+          color: #f6d8e1;
+        }
+
+        .promise p {
+          max-width: 590px;
+          margin: 18px auto;
+          color: var(--muted);
+          line-height: 1.9;
+        }
+
+        .signature {
+          margin-top: 34px;
+          font-family: "Great Vibes", cursive;
+          font-size: 2.4rem;
+          color: var(--rose);
+        }
+
+        footer {
+          text-align: center;
+          padding: 0 20px 50px;
+          color: #735963;
+          font-size: .68rem;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+        }
+
+        @media (max-width: 650px) {
+          .page { width: min(100% - 18px, 980px); }
+          .hero { min-height: 82vh; padding-top: 50px; }
+          .slideshow { min-height: 300px; aspect-ratio: 4 / 5; }
+          .memory { padding: 10px; border-radius: 25px; }
+          .slideshow { border-radius: 19px; }
+          .section { padding: 55px 0; }
+          .story-card { padding: 45px 24px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+          }
+        }
+    </style>
+</head>
+
+<body>
+<div class="particles" id="particles"></div>
+
+<main class="page">
+
+    <section class="hero">
+        <div>
+            <div class="eyebrow">A little piece of my heart</div>
+
+            <h1>Through Every Storm</h1>
+
+            <h2>For the love that chooses to stay.</h2>
+
+            <p>
+                Some stories are written only in sunshine.
+                Ours deserves to be written in every season —
+                in the laughter, in the silence, in the easy days,
+                and especially in the storms.
+            </p>
+
+            <div class="scroll">↓ &nbsp; our story &nbsp; ↓</div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-title">
+            <div class="small">The moments</div>
+            <h3>Little pieces of us</h3>
+        </div>
+
+        <div class="memory">
+            <div class="slideshow" id="slideshow"></div>
+
+            <div class="controls">
+                <button class="arrow" id="prev" aria-label="Previous photo">‹</button>
+                <div class="dots" id="dots"></div>
+                <button class="arrow" id="next" aria-label="Next photo">›</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="section story">
+        <div class="section-title">
+            <div class="small">When life gets difficult</div>
+            <h3>When the storm comes</h3>
+        </div>
+
+        <div class="story-card">
+            <p>
+                There will be days when life feels heavy.
+                Days when the road gets difficult, when words fail us,
+                when we don't understand each other, and when the world
+                seems to ask more from us than we have to give.
+            </p>
+
+            <p>
+                There will be storms we never expected.
+                Moments when the sky turns dark and the future feels uncertain.
+            </p>
+
+            <div class="emphasis">
+                But I don't want a love that only exists in the sunshine.
+            </div>
+
+            <p>
+                I want the kind of love that stays when the rain comes.
+                The kind that reaches for your hand when everything feels dark.
+                The kind that listens when words are difficult,
+                forgives when hearts are tired, and chooses to try again.
+            </p>
+
+            <p>
+                Because storms don't mean the journey is over.
+                Sometimes they simply remind us how precious the light is.
+            </p>
+
+            <div class="emphasis">
+                If we ever lose our way,<br>
+                I hope we find our way back to each other.
+            </div>
+
+            <p>
+                And if the world becomes loud, I hope you remember this:
+            </p>
+
+            <p class="final">
+                I am still here.
+                <br><br>
+                Not only for the easy days.
+                Not only for the laughter and beautiful moments.
+            </p>
+
+            <div class="emphasis">
+                For the storms too.
+            </div>
+
+            <p class="final">
+                Because what we have is worth fighting for.
+                And when the storm finally passes,
+                I want to be standing beside you,
+                looking at the same sky,
+                grateful that we stayed.
+            </p>
+        </div>
+    </section>
+
+    <section class="promise">
+        <div class="heart">❤️</div>
+        <h3>Still you. Still us.</h3>
+
+        <p>
+            Real love isn't the absence of storms.
+            It's choosing each other while the storm is passing.
+        </p>
+
+        <div class="signature">Always, with all my heart.</div>
+    </section>
+
+    <footer>
+        made with love · through every season
+    </footer>
+
+</main>
+
+<script>
+    (() => {
+      const photos = [
+        {
+          url: "../../moments/0163083B-646B-443E-9771-82023224528C.JPG",
+          caption: "your smile, my favorite place"
+        },
+        {
+          url: "../../moments/22EF7410-768C-4B9E-A8F4-8CD5D7BE50E4.JPG",
+          caption: "the moments I wish I could hold forever"
+        },
+        {
+          url: "../../moments/2B460CDF-CF23-493B-ACB6-23E03D4A0860.JPG",
+          caption: "even ordinary days become beautiful with you"
+        },
+        {
+          url: "../../moments/2E934927-3394-45CD-822A-64F76C5EF58F.JPG",
+          caption: "through every season"
+        },
+        {
+          url: "../../moments/3A90D5B1-4FDB-4949-B9F8-55AF5890C005.JPG",
+          caption: "my heart knows where it belongs"
+        },
+        {
+          url: "../../moments/4F5FF417-E35A-421D-A47E-E7519BBAE6CE.JPG",
+          caption: "and when the night comes, I still choose you"
+        },
+        {
+          url: "../../moments/603DF14F-BD44-42D8-B387-EB093CB5101A.JPG",
+          caption: "every moment with you is a gift"
+        },
+        {
+          url: "../../moments/67F61C63-D4A5-442F-86B5-A69CC5B4E68A.JPG",
+          caption: "building our future, step by step"
+        },
+        {
+          url: "../../moments/7A8F45AE-763D-41F6-BAD6-1D794DE39B8E.JPG",
+          caption: "you are my sun on a rainy day"
+        },
+        {
+          url: "../../moments/94EDE18F-D9C0-4795-8C68-825C1DE8BDEA.JPG",
+          caption: "forever wouldn't be long enough"
+        },
+        {
+          url: "../../moments/A11ECC23-A084-4ADE-9D10-EC24EB4F3651.JPG",
+          caption: "the love that keeps me grounded"
+        },
+        {
+          url: "../../moments/B7BF2367-9554-42ED-86E0-52BFDC6E8954.JPG",
+          caption: "grateful for us, always"
+        },
+        {
+          url: "../../moments/E246031B-96E1-4C2C-8F7A-88EEE1CDE960.JPG",
+          caption: "my favorite adventure is you"
+        },
+        {
+          url: "../../moments/E9C92A7E-BFCC-4A6B-991B-DDE2C6ECE74F.JPG",
+          caption: "to the moon and back"
+        },
+        {
+          url: "../../moments/2B460CDF-CF23-493B-ACB6-23E03D4A0860(1).JPG",
+          caption: "through every storm, hand in hand"
+        }
+      ];
+
+      const slideshow = document.getElementById("slideshow");
+      const dots = document.getElementById("dots");
+      const prev = document.getElementById("prev");
+      const next = document.getElementById("next");
+
+      let current = 0;
+      let timer;
+
+      photos.forEach((photo, index) => {
+        const slide = document.createElement("div");
+        slide.className = "slide" + (index === 0 ? " active" : "");
+        slide.style.backgroundImage = `url("${photo.url}")`;
+
+        const caption = document.createElement("div");
+        caption.className = "caption";
+        caption.textContent = photo.caption;
+
+        slide.appendChild(caption);
+        slideshow.appendChild(slide);
+
+        const dot = document.createElement("button");
+        dot.className = "dot" + (index === 0 ? " active" : "");
+        dot.setAttribute("aria-label", `Show memory ${index + 1}`);
+        dot.addEventListener("click", () => show(index));
+        dots.appendChild(dot);
+      });
+
+      const slides = [...document.querySelectorAll(".slide")];
+      const dotButtons = [...document.querySelectorAll(".dot")];
+
+      function show(index) {
+        current = (index + photos.length) % photos.length;
+
+        slides.forEach((slide, i) =>
+          slide.classList.toggle("active", i === current)
+        );
+
+        dotButtons.forEach((dot, i) =>
+          dot.classList.toggle("active", i === current)
+        );
+
+        restart();
+      }
+
+      function restart() {
+        clearInterval(timer);
+        timer = setInterval(() => show(current + 1), 5200);
+      }
+
+      prev.addEventListener("click", () => show(current - 1));
+      next.addEventListener("click", () => show(current + 1));
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "ArrowLeft") show(current - 1);
+        if (event.key === "ArrowRight") show(current + 1);
+      });
+
+      let startX = 0;
+
+      slideshow.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
+      }, { passive: true });
+
+      slideshow.addEventListener("touchend", e => {
+        const distance = e.changedTouches[0].clientX - startX;
+        if (Math.abs(distance) > 50) {
+          show(current + (distance < 0 ? 1 : -1));
+        }
+      }, { passive: true });
+
+      const particleContainer = document.getElementById("particles");
+
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement("span");
+        particle.className = "particle";
+        const size = 2 + Math.random() * 6;
+
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.animationDuration = `${12 + Math.random() * 20}s`;
+        particle.style.animationDelay = `${Math.random() * 20}s`;
+
+        particleContainer.appendChild(particle);
+      }
+
+      restart();
+    })();
+</script>
+</body>
+</html>
