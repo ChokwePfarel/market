@@ -1,47 +1,89 @@
-import 'dart:convert';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart'; // Required for PlatformException
+import 'package:purchases_flutter/purchases_flutter.dart';
+
 
 abstract class PaymentRemoteDataSource {
-  Future<String> createCheckoutSession(int amountInCents, String productId);
+  Future<void> init();
+  Future<bool> purchaseListingFee();
 }
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
-  final http.Client client;
-
-  PaymentRemoteDataSourceImpl({required this.client});
+  // RevenueCat Production SDK Keys
+  static const _androidApiKey = 'goog_KzjarxBbqUCyAzKZHwrxnodPuIb';
+  static const _appleApiKey = 'goog_KzjarxBbqUCyAzKZHwrxnodPuIb';
+  
+  static const _proEntitlementId = 'study_market_pro';
+  
+  bool _isConfigured = false;
 
   @override
-  Future<String> createCheckoutSession(int amountInCents, String productId) async {
-    final supabaseUrl = dotenv.env['SUPABASE_URL'];
-    final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
-
-    if (supabaseUrl == null || anonKey == null) {
-      throw Exception('Supabase credentials not found in .env');
-    }
-
-    debugPrint('PaymentRemoteDataSource: Calling Supabase Edge Function to create YOCO checkout...');
+  Future<void> init() async {
+    if (_isConfigured) return;
     
-    final response = await client.post(
-      Uri.parse('$supabaseUrl/functions/v1/create-yoco-checkout'),
-      headers: {
-        'Authorization': 'Bearer $anonKey',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'amount': amountInCents,
-        'productId': productId,
-      }),
-    );
+    try {
+      await Purchases.setLogLevel(LogLevel.debug);
+      
+      PurchasesConfiguration configuration;
+      if (Platform.isAndroid) {
+        configuration = PurchasesConfiguration(_androidApiKey);
+      } else {
+        configuration = PurchasesConfiguration(_appleApiKey);
+      }
+      
+      await Purchases.configure(configuration);
+      _isConfigured = true;
+      debugPrint('RevenueCat: Configured successfully');
+    } catch (e) {
+      debugPrint('RevenueCat: Configuration Error: $e');
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['redirectUrl'] as String;
-    } else {
-      debugPrint('Edge Function Error Response: ${response.body}');
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['error'] ?? 'Failed to generate payment link');
+  @override
+  Future<bool> purchaseListingFee() async {
+    try {
+      // Ensure initialized before proceeding
+      if (!_isConfigured) {
+        debugPrint('RevenueCat: Not configured, initializing now...');
+        await init();
+      }
+
+      debugPrint('RevenueCat: Fetching offerings...');
+      final offerings = await Purchases.getOfferings();
+      
+      if (offerings.current == null || offerings.current!.availablePackages.isEmpty) {
+        debugPrint('RevenueCat: No active offerings found in dashboard.');
+        return false;
+      }
+
+      final package = offerings.current!.availablePackages.first;
+      debugPrint('RevenueCat: Attempting purchase of package: ${package.identifier}');
+
+      // Using the direct purchase method supported by version 10.x
+      final purchaseResult = await Purchases.purchasePackage(package);
+      
+      // Check if the specific entitlement is now active
+      final bool hasPro = purchaseResult.customerInfo.entitlements.all[_proEntitlementId]?.isActive ?? false;
+      debugPrint('RevenueCat: Purchase complete. Entitlement $_proEntitlementId active: $hasPro');
+      
+      return hasPro;
+
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      debugPrint('RevenueCat: ERROR CODE: $errorCode');
+      debugPrint('RevenueCat: ERROR MESSAGE: ${e.message}');
+      debugPrint('RevenueCat: ERROR DETAILS: ${e.details}');
+
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint('RevenueCat: User cancelled the purchase.');
+      } else {
+        debugPrint('RevenueCat: Technical Error: ${e.message}');
+      }
+      return false;
+    } catch (e) {
+      debugPrint('RevenueCat: Unexpected Error: $e');
+      return false;
     }
   }
 }

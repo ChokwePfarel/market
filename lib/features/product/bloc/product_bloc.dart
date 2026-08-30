@@ -144,15 +144,8 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         debugPrint('ProductBloc: Emitting ProductAddedSuccess');
         emit(ProductAddedSuccess());
       } else {
-        debugPrint('ProductBloc: Generating Yoco checkout URL...');
-        try {
-          final yocoUrl = await _paymentRepository.createCheckoutSession(2000, productId);
-          debugPrint('ProductBloc: Emitting PaymentRequired. URL: $yocoUrl');
-          emit(PaymentRequired(productId: productId, yocoUrl: yocoUrl));
-        } catch (paymentError) {
-          debugPrint('ProductBloc: YOCO Session Generation Failed: $paymentError');
-          emit(ProductError("Could not connect to YOCO. Please check your internet or try later."));
-        }
+        debugPrint('ProductBloc: Emitting PaymentRequired for $productId');
+        emit(PaymentRequired(productId: productId));
       }
     } catch (e) {
       debugPrint('ProductBloc: Error during AddProduct: $e');
@@ -164,10 +157,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     ActivateProductEvent event,
     Emitter<ProductState> emit,
   ) async {
+    debugPrint('ProductBloc: Activating product ${event.productId}');
     try {
       await _productRepository.activateProduct(event.productId);
-      // Optional: Refresh feed if needed
+      debugPrint('ProductBloc: Activation successful, emitting ProductAddedSuccess');
+      emit(ProductAddedSuccess());
     } catch (e) {
+      debugPrint('ProductBloc: Activation error: $e');
       emit(ProductError(e.toString()));
     }
   }

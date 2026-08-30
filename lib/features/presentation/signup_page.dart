@@ -27,6 +27,7 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
 
   // Mapping of universities to their expected email domains
+
   final Map<String, String> _universityDomains = {
     'University of the Western Cape (UWC)': '@myuwc.ac.za',
     'University of Cape Town (UCT)': '@myuct.ac.za',
@@ -35,8 +36,23 @@ class _SignupPageState extends State<SignupPage> {
     'University of Johannesburg': '@student.uj.ac.za',
     'University of Pretoria': '@tuks.co.za',
     'University of KwaZulu-Natal': '@stu.ukzn.ac.za',
-    'Rhodes University': '@ruconnect.ru.ac.za',
+    'Rhodes University': '@ru.ac.za',
+    //Additional universities
+    'Nelson Mandela University': '@mandela.ac.za',
+    'University of Limpopo': '@ul.ac.za',
+    'University of Fort Hare': '@ufh.ac.za',
+    'North-West University (NWU)': '@nwu.ac.za',
+    'University of Mpumalanga': '@ump.ac.za',
+    'Sol Plaatje University': '@spu.ac.za',
+    'Walter Sisulu University': '@wsu.ac.za',
+    'Cape Peninsula University of Technology (CPUT)': '@mycput.ac.za',
+    'Durban University of Technology (DUT)': '@dut.ac.za',
+    'Mangosuthu University of Technology (MUT)': '@mut.ac.za',
+    'Tshwane University of Technology (TUT)': '@tut.ac.za',
+    'Central University of Technology (CUT)': '@cut.ac.za',
+    'Vaal University of Technology (VUT)': '@vut.ac.za',
   };
+
 
 
   @override

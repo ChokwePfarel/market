@@ -60,18 +60,25 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
 
-    if (pickedFile != null) {
-      final croppedFile = await _cropImage(pickedFile.path);
-      if (croppedFile != null) {
-        setState(() {
-          _localImagePath = croppedFile.path;
-        });
+      if (pickedFile != null) {
+        final croppedFile = await _cropImage(pickedFile.path);
+        if (croppedFile != null) {
+          setState(() {
+            _localImagePath = croppedFile.path;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (mounted) {
+        AppSnackBar.error(context, 'Failed to pick image');
       }
     }
   }
@@ -105,7 +112,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
           userType: 'Student',
           university: _selectedUniversity,
           isVerified: false,
-          profileImageUrl: /*_localImagePath ??*/ '', // We'll need to handle the upload in UserBloc if this is a local path
+          profileImageUrl: _localImagePath ?? '', 
         ),
       );
     }
@@ -115,12 +122,12 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      /*appBar: AppBar(
+      appBar: AppBar(
         title: const Text('Setup Your Profile'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-      ),*/
+      ),
       body: BlocListener<UserBloc, UserState>(
         listener: (context, state) {
           if (state is UserLoaded) {
@@ -129,17 +136,16 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
               (route) => false,
             );
           } else if (state is UserError) {
-            AppSnackBar.error(context, 'Something went wrong');
+            AppSnackBar.error(context, state.message);
           }
         },
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: ListView(
               children: [
-                /*Center(
+                Center(
                   child: GestureDetector(
                     onTap: _pickImage,
                     child: Stack(
@@ -169,7 +175,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
                       ],
                     ),
                   ),
-                ),*/
+                ),
                 const SizedBox(height: 32),
                 
                 TextFormField(

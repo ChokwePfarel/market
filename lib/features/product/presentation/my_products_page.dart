@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import '../../../domain/repositories/payment_repository.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/product_event.dart';
 import '../bloc/product_state.dart';
@@ -14,6 +16,8 @@ class MyProductsPage extends StatefulWidget {
 }
 
 class _MyProductsPageState extends State<MyProductsPage> {
+  String? _processingProductId;
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +28,35 @@ class _MyProductsPageState extends State<MyProductsPage> {
     final userState = context.read<UserBloc>().state;
     if (userState is UserLoaded) {
       context.read<ProductBloc>().add(FetchUserProducts(userState.user.id));
+    }
+  }
+
+  Future<void> _handleRetryPayment(String productId) async {
+    setState(() => _processingProductId = productId);
+    try {
+      final success = await GetIt.I<PaymentRepository>().purchaseListingFee();
+      if (success) {
+        if (mounted) {
+          context.read<ProductBloc>().add(ActivateProductEvent(productId));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Payment successful! Activating...'), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        setState(() => _processingProductId = null);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Payment failed or was cancelled.')),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _processingProductId = null);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -236,15 +269,23 @@ class _MyProductsPageState extends State<MyProductsPage> {
           ),
         ],
       ),
-      body: BlocBuilder<ProductBloc, ProductState>(
-        builder: (context, state) {
-          if (state is ProductLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-              ),
-            );
+      body: BlocListener<ProductBloc, ProductState>(
+        listener: (context, state) {
+          if (state is ProductAddedSuccess && _processingProductId != null) {
+            setState(() => _processingProductId = null);
+            _loadProducts(); // Refresh list to show active status
           }
+        },
+        child: BlocBuilder<ProductBloc, ProductState>(
+          builder: (context, state) {
+            if (state is ProductLoading && _processingProductId == null) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                ),
+              );
+            }
+            // ... rest of the builder
 
           if (state is UserProductsLoaded) {
             if (state.products.isEmpty) {
@@ -263,10 +304,27 @@ class _MyProductsPageState extends State<MyProductsPage> {
                 itemCount: state.products.length,
                 itemBuilder: (context, index) {
                   final product = state.products[index];
-                  return _ProductCard(
-                    product: product,
-                    onEdit: () => _editPrice(product.id, product.price),
-                    onDelete: () => _confirmDelete(product.id, product.name),
+                  final isProcessingThis = _processingProductId == product.id;
+
+                  return Stack(
+                    children: [
+                      _ProductCard(
+                        product: product,
+                        onEdit: () => _editPrice(product.id, product.price),
+                        onDelete: () => _confirmDelete(product.id, product.name),
+                        onPay: () => _handleRetryPayment(product.id),
+                      ),
+                      if (isProcessingThis)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(child: CircularProgressIndicator(color: Colors.black)),
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),
@@ -331,7 +389,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
           return const SizedBox.shrink();
         },
       ),
-    );
+    ));
   }
 }
 
@@ -404,16 +462,19 @@ class _ProductCard extends StatelessWidget {
   final dynamic product;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onPay;
 
   const _ProductCard({
     required this.product,
     required this.onEdit,
     required this.onDelete,
+    required this.onPay,
   });
 
   @override
   Widget build(BuildContext context) {
     final isActive = product.status == 'active';
+    final isPending = product.status == 'pending_payment';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -501,13 +562,13 @@ class _ProductCard extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.grey[200] : Colors.grey[300],
+                    color: isActive ? Colors.grey[200] : (isPending ? Colors.amber[100] : Colors.grey[300]),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     product.status.toUpperCase(),
                     style: TextStyle(
-                      color: isActive ? Colors.black : Colors.grey[700],
+                      color: isActive ? Colors.black : (isPending ? Colors.amber[900] : Colors.grey[700]),
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -519,6 +580,12 @@ class _ProductCard extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (isPending)
+                  IconButton(
+                    icon: Icon(Icons.payment_rounded, color: Colors.amber[900]),
+                    onPressed: onPay,
+                    tooltip: 'Pay to activate',
+                  ),
                 IconButton(
                   icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
                   onPressed: onEdit,
@@ -538,7 +605,7 @@ class _ProductCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: isPending ? Colors.amber[50] : Colors.grey[50],
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(12),
                   bottomRight: Radius.circular(12),
@@ -547,20 +614,36 @@ class _ProductCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
+                    isPending ? Icons.warning_amber_rounded : Icons.info_outline,
                     size: 16,
-                    color: Colors.grey[500],
+                    color: isPending ? Colors.amber[900] : Colors.grey[500],
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This listing is ${product.status} and not visible to buyers',
+                      isPending
+                        ? 'Listing is hidden. Pay R20 to activate.'
+                        : 'This listing is ${product.status} and not visible to buyers',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: isPending ? Colors.amber[900] : Colors.grey[600],
+                        fontWeight: isPending ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
                   ),
+                  if (isPending)
+                    TextButton(
+                      onPressed: onPay,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.amber[900],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('ACTIVATE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
                 ],
               ),
             ),

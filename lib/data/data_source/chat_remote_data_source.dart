@@ -44,33 +44,43 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<List<ConversationModel>> getConversations(String currentUserId) async {
-    final response = await client
-        .from('conversations')
-        .select('''
-      *,
-      user_one:profiles!conversations_user_one_id_fkey (
-        id, full_name, profile_image_url, is_verified
-      ),
-      user_two:profiles!conversations_user_two_id_fkey (
-        id, full_name, profile_image_url, is_verified
-      ),
-      messages (
-        id,
-        is_read,
-        sender_id
-      )
-    ''')
-        .or('user_one_id.eq.$currentUserId,user_two_id.eq.$currentUserId')
-        .order('last_message_at', ascending: false);
+    try {
+      final response = await client
+          .from('conversations')
+          .select('''
+        *,
+        user_one:profiles!conversations_user_one_id_fkey (
+          id, full_name, profile_image_url, is_verified
+        ),
+        user_two:profiles!conversations_user_two_id_fkey (
+          id, full_name, profile_image_url, is_verified
+        ),
+        messages (
+          id,
+          is_read,
+          sender_id
+        )
+      ''')
+          .or('user_one_id.eq.$currentUserId,user_two_id.eq.$currentUserId')
+          .order('last_message_at', ascending: false);
 
-    return (response as List).map((e) {
-      final messages = (e['messages'] as List? ?? []);
-      final unreadCount = messages
-          .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
-          .length;
+      debugPrint('ChatRemoteDataSource: getConversations returned ${response.length} rows for user $currentUserId');
+      if (response.isNotEmpty) {
+        debugPrint('ChatRemoteDataSource: First row data: ${response.first}');
+      }
 
-      return ConversationModel.fromJson(e, currentUserId, unreadCount);
-    }).toList();
+      return (response as List).map((e) {
+        final messages = (e['messages'] as List? ?? []);
+        final unreadCount = messages
+            .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
+            .length;
+
+        return ConversationModel.fromJson(e, currentUserId, unreadCount);
+      }).toList();
+    } catch (e) {
+      debugPrint('ChatRemoteDataSource: Error in getConversations: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -211,17 +221,30 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       schema: 'public',
       table: 'conversations',
       callback: (payload) async {
-        if (payload.newRecord.isEmpty) return;
+        try {
+          // 1. Get the row ID and the user columns
+          final String conversationId = payload.newRecord['id'] ?? payload.oldRecord['id'];
+          if (conversationId == null) return;
 
-        final String userOneId = payload.newRecord['user_one_id'];
-        final String userTwoId = payload.newRecord['user_two_id'];
+          // 2. Identify if this user is involved. 
+          // Note: On UPDATE, columns might be missing if they didn't change, 
+          // so we may need to fetch the full row to be 100% sure.
+          final String? userOneId = payload.newRecord['user_one_id'];
+          final String? userTwoId = payload.newRecord['user_two_id'];
 
-        // Only process if the current user is part of this conversation
-        if (userOneId == currentUserId || userTwoId == currentUserId) {
-          final String conversationId = payload.newRecord['id'];
-          debugPrint('ChatRemoteDataSource: Conversation update for $conversationId');
+          bool shouldUpdate = false;
+          if (userOneId != null || userTwoId != null) {
+            shouldUpdate = (userOneId == currentUserId || userTwoId == currentUserId);
+          } else {
+            // If IDs are missing (typical in some Realtime versions for UPDATES), 
+            // we do a quick check if this ID is already in our list.
+            // But since the DataSource doesn't know the list, we'll just fetch it.
+            shouldUpdate = true; 
+          }
 
-          try {
+          if (shouldUpdate) {
+            debugPrint('ChatRemoteDataSource: Detected potential conversation update for $conversationId');
+            
             final updated = await client
                 .from('conversations')
                 .select('''
@@ -237,17 +260,25 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
                       )
                     ''')
                 .eq('id', conversationId)
-                .single();
+                .maybeSingle();
 
-            final messages = (updated['messages'] as List? ?? []);
-            final unreadCount = messages
-                .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
-                .length;
+            if (updated == null) return;
 
-            controller.add(ConversationModel.fromJson(updated, currentUserId, unreadCount));
-          } catch (e) {
-            debugPrint('ChatRemoteDataSource: Error fetching updated conversation: $e');
+            final String actualUserOne = updated['user_one_id'];
+            final String actualUserTwo = updated['user_two_id'];
+
+            // FINAL double-check: is this row actually for this user?
+            if (actualUserOne == currentUserId || actualUserTwo == currentUserId) {
+              final messages = (updated['messages'] as List? ?? []);
+              final unreadCount = messages
+                  .where((m) => m['is_read'] == false && m['sender_id'] != currentUserId)
+                  .length;
+
+              controller.add(ConversationModel.fromJson(updated, currentUserId, unreadCount));
+            }
           }
+        } catch (e) {
+          debugPrint('ChatRemoteDataSource: Error handling conversation realtime update: $e');
         }
       },
     ).subscribe();

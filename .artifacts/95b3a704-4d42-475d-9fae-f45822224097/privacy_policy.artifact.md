@@ -19,7 +19,7 @@ To provide a secure environment for students, we collect the following:
 *   **Chat Messages:** Text and metadata sent through our real-time messaging system.
 
 ### 1.3 Payment Information
-*   **Transaction Details:** We use **YOCO** for payment processing. When you pay for a listing fee, your credit card details are collected directly by YOCO. We do not store or process your full credit card information on our servers.
+*   **Transaction Details:** We use **RevenueCat** and standard platform payment systems (Apple App Store / Google Play Store) for payment processing. When you pay for a listing fee, your payment is processed directly by the platform store. We do not store or process your credit card information on our servers.
 
 ---
 
@@ -28,7 +28,7 @@ We use the collected data to:
 *   **Verify Student Status:** Ensure only valid university students can access the marketplace.
 *   **Facilitate Transactions:** Display your listings to other students at your university.
 *   **Enable Communication:** Allow buyers and sellers to chat in real-time.
-*   **Monetization Management:** Track your free trial status and process listing fees via YOCO.
+*   **Monetization Management:** Track your free trial status and process listing fees via in-app purchases.
 *   **Improve Service:** Analyze usage patterns to enhance app performance.
 
 ---
@@ -36,7 +36,7 @@ We use the collected data to:
 ## 3. Information Sharing
 
 *   **Public (Within App):** Your listings, profile name, university, and profile picture are visible to other authenticated students at your university.
-*   **Service Providers:** We share necessary data with **Supabase** (Database, Auth, and Storage) and **YOCO** (Payment Gateway) to run the app.
+*   **Service Providers:** We share necessary data with **Supabase** (Database, Auth, and Storage) and **RevenueCat** (Subscription/Purchase Management) to run the app.
 *   **Legal Requirements:** We may disclose information if required by law to protect student safety or comply with legal processes.
 
 ---

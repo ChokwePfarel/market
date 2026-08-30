@@ -12,6 +12,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
   final ChatRepository _chatRepository;
   StreamSubscription? _subscription;
   String? _activeConversationId;
+  String? _currentUserId; // Store the user ID locally for filtering
 
   ConversationsBloc(this._chatRepository) : super(ConversationsInitial()) {
     on<LoadConversations>(_onLoad);
@@ -26,6 +27,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     LoadConversations event,
     Emitter<ConversationsState> emit,
   ) async {
+    _currentUserId = event.currentUserId; // Save for later use in updates
     final currentState = state;
     
     // 1. Show cached data immediately if we aren't already showing data
@@ -40,11 +42,17 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       // 2. Fetch fresh data from server
       final conversations =
           await _chatRepository.getConversations(event.currentUserId);
+      
+      // Double-check filtering here to ensure we ONLY show current user's chats
+      final filtered = conversations.where((c) => 
+        c.userOneId == event.currentUserId || c.userTwoId == event.currentUserId
+      ).toList();
+
       final unreadCount =
           await _chatRepository.getUnreadCount(event.currentUserId);
 
       // 3. Update cache
-      final models = conversations.whereType<ConversationModel>().toList();
+      final models = filtered.whereType<ConversationModel>().toList();
       if (models.isNotEmpty) {
         await OfflineCache.cacheConversations(event.currentUserId, models);
       }
@@ -52,7 +60,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       // 4. Emit fresh data
       emit(
         ConversationsLoaded(
-          conversations: conversations,
+          conversations: filtered,
           unreadCount: unreadCount,
         ),
       );
@@ -100,6 +108,14 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     final current = state;
     if (current is! ConversationsLoaded) return;
 
+    // SAFETY: Only process if the current user is part of the updated conversation
+    if (_currentUserId != null &&
+        event.conversation.userOneId != _currentUserId &&
+        event.conversation.userTwoId != _currentUserId) {
+      debugPrint('ConversationsBloc: Ignoring unrelated chat update');
+      return;
+    }
+
     bool found = false;
     final List<ConversationEntity> updatedList = current.conversations.map((c) {
       if (c.id == event.conversation.id) {
@@ -123,6 +139,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     }).toList();
 
     if (!found) {
+      debugPrint('ConversationsBloc: Adding new conversation ${event.conversation.id}');
       updatedList.add(event.conversation);
     }
 

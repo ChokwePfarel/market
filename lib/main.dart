@@ -64,6 +64,14 @@ void main() async {
   debugPrint('Setting up dependency injection...');
   _setupDependencyInjection(isSupabaseInitialized);
 
+  // Initialize RevenueCat for payments
+  try {
+    debugPrint('Initializing RevenueCat...');
+    await GetIt.I<PaymentRepository>().init();
+  } catch (e) {
+    debugPrint('Main: RevenueCat initialization failed: $e');
+  }
+
   debugPrint('Running MarketApp...');
   runApp(const MarketApp());
 }
@@ -124,9 +132,7 @@ void _setupDependencyInjection(bool isSupabaseInitialized) {
     () => OtherUserRepositoryImpl(dataSource: OtherUserRemoteDataSourceImpl(client: Supabase.instance.client)),
   );
 
-  final paymentRemoteDataSource = PaymentRemoteDataSourceImpl(
-    client: http.Client(),
-  );
+  final paymentRemoteDataSource = PaymentRemoteDataSourceImpl();
 
   getIt.registerLazySingleton<PaymentRepository>(
     () => PaymentRepositoryImpl(remoteDataSource: paymentRemoteDataSource),

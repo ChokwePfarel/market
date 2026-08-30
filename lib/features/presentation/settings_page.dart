@@ -102,7 +102,9 @@ class SettingsPage extends StatelessWidget {
                   fontSize: 15,
                 ),
               ),
+
               const SizedBox(height: 12),
+
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(

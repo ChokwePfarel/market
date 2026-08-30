@@ -7,7 +7,12 @@ class PaymentRepositoryImpl implements PaymentRepository {
   PaymentRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<String> createCheckoutSession(int amountInCents, String productId) async {
-    return await remoteDataSource.createCheckoutSession(amountInCents, productId);
+  Future<void> init() async {
+    await remoteDataSource.init();
+  }
+
+  @override
+  Future<bool> purchaseListingFee() async {
+    return await remoteDataSource.purchaseListingFee();
   }
 }

@@ -11,6 +11,8 @@ import '../../images/bloc/images_state.dart';
 import '../../user/user_bloc.dart';
 import '../../user/user_state.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../domain/repositories/payment_repository.dart';
+import 'package:get_it/get_it.dart';
 
 
 class AddProductScreen extends StatefulWidget {
@@ -120,23 +122,33 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
-  Future<void> _handlePayment(String url) async {
-    final uri = Uri.parse(url);
+  Future<void> _handlePayment(String productId) async {
+    setState(() => _isSubmitting = true);
     try {
-      final success = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!success) {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      final success = await GetIt.I<PaymentRepository>().purchaseListingFee();
+      if (success) {
+        if (mounted) {
+          context.read<ProductBloc>().add(ActivateProductEvent(productId));
+        }
+      } else {
+        setState(() => _isSubmitting = false);
+        if (mounted) {
+          // Changed to show more detail for debugging on the phone
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Payment failed. Check your dashboard configuration or Entitlement ID.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open payment page. Please check your browser settings.'),
-          backgroundColor: Colors.black,
-        ),
-      );
+      setState(() => _isSubmitting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -177,16 +189,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
               Navigator.pop(context);
             } else if (state is PaymentRequired) {
               setState(() => _isSubmitting = false);
-              _showPaymentDialog(state.yocoUrl);
+              _showPaymentDialog(state.productId);
             } else if (state is ProductError) {
               setState(() => _isSubmitting = false);
-              String displayMessage = state.message;
-              if (state.message.contains('<html>') || state.message.contains('<html')) {
-                displayMessage = 'Connection error with payment gateway. Please try again.';
-              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(displayMessage),
+                  content: Text(state.message),
                   backgroundColor: Colors.black,
                 ),
               );
@@ -602,113 +610,137 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  void _showPaymentDialog(String url) {
-    showDialog(
+  void _showPaymentDialog(String productId) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
-        title: const Text(
-          'Listing Fee Required',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Icon(Icons.stars_rounded, size: 64, color: Colors.amber),
+            const SizedBox(height: 24),
+            const Text(
+              'Activate Your Listing',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'Unlock your second listing for just R20 and start reaching buyers at your university today.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const Spacer(),
+            // Paywall Card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.black, width: 2),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Fee: ',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Standard Listing',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          'One-time fee',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
                   ),
                   const Text(
-                    'R20.00',
+                    'R20',
                     style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
                       color: Colors.black,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _handlePayment(productId);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'PAY NOW',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text(
-              'You have used your one free listing. To activate this new listing, a fee of R20 is required.',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-                height: 1.5,
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: Text(
+                'MAYBE LATER',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'You will be redirected to YOCO to safely enter your card details.',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 13,
-                height: 1.5,
-              ),
-            ),
+            const SizedBox(height: 32),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-            ),
-            child: const Text(
-              'CANCEL',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              minimumSize: const Size(120, 40),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              _handlePayment(url);
-            },
-            child: const Text(
-              'PAY R20',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

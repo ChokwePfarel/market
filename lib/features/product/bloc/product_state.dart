@@ -43,12 +43,11 @@ class ProductAddedSuccess extends ProductState {}
 
 class PaymentRequired extends ProductState {
   final String productId;
-  final String yocoUrl;
 
-  const PaymentRequired({required this.productId, required this.yocoUrl});
+  const PaymentRequired({required this.productId});
 
   @override
-  List<Object?> get props => [productId, yocoUrl];
+  List<Object?> get props => [productId];
 }
 
 class UserProductsLoaded extends ProductState {
