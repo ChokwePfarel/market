@@ -405,15 +405,27 @@ class _ConversationTileState extends State<_ConversationTile>
     }
 
     if (url.startsWith('http')) {
-      return Container(
-        width: 58,
-        height: 54,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            image: CachedNetworkImageProvider(url),
-            fit: BoxFit.cover,
+      return CachedNetworkImage(
+        imageUrl: url,
+        imageBuilder: (context, imageProvider) => Container(
+          width: 58,
+          height: 54,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
           ),
+        ),
+        placeholder: (context, url) => Container(
+          width: 58,
+          height: 54,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        errorWidget: (context, url, error) => Container(
+          width: 58,
+          height: 54,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          child: const Icon(Icons.person, color: Colors.grey, size: 28),
         ),
       );
     }

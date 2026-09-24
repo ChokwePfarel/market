@@ -30,7 +30,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
   final _scrollController = ScrollController();
   String _selectedCategory = 'Electronics';
   final List<String> _categories = [
@@ -40,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
     'Sports',
     'Room',
   ];
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -119,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
@@ -126,7 +130,18 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddProductScreen()),
-          );
+          ).then((_) {
+            final userState = context.read<UserBloc>().state;
+            if (userState is UserLoaded) {
+              context.read<ProductBloc>().add(
+                FetchProducts(
+                  university: userState.user.university,
+                  category: _selectedCategory,
+                  isRefresh: true,
+                ),
+              );
+            }
+          });
         },
         backgroundColor: Colors.black,
         shape: RoundedRectangleBorder(
@@ -173,13 +188,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 listener: (context, state) {
                   if (state is UserLoaded) {
-                    debugPrint('HomeScreen: User university changed to ${state.user.university}, refreshing...');
+                    debugPrint('HomeScreen: User loaded/updated. Syncing data...');
+                    
+                    // 1. Fetch products
                     context.read<ProductBloc>().add(
                       FetchProducts(
                         university: state.user.university,
                         category: _selectedCategory,
                         isRefresh: true,
                       ),
+                    );
+
+                    // 2. Start persistent notification listener
+                    context.read<ConversationsBloc>().add(
+                      LoadConversations(state.user.id),
                     );
                   }
                 },
@@ -288,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           }
 
-                          return const SizedBox.shrink();
+                          return _buildShimmerGrid();
                         },
                       ),
                     ],
@@ -343,26 +365,43 @@ class _HomeScreenState extends State<HomeScreen> {
               }
 
               final bool hasImage = profileUrl != null && profileUrl.isNotEmpty;
-              ImageProvider? imageProvider;
-              
-              if (hasImage) {
-                if (profileUrl!.startsWith('http')) {
-                  imageProvider = CachedNetworkImageProvider(profileUrl!);
-                } else {
-                  imageProvider = FileImage(
-                    File(profileUrl.replaceFirst('file://', '').replaceFirst('file:/', '')),
-                  );
-                }
+
+              if (!hasImage) {
+                return const CircleAvatar(
+                  radius: 23,
+                  backgroundColor: Color(0xFFF0E8F7),
+                  child: Icon(Icons.person, color: Colors.black87, size: 25),
+                );
               }
 
-              return CircleAvatar(
-                radius: 23,
-                backgroundColor: const Color(0xFFF0E8F7),
-                backgroundImage: imageProvider,
-                child: !hasImage
-                    ? const Icon(Icons.person, color: Colors.black87, size: 25)
-                    : null,
-              );
+              if (profileUrl!.startsWith('http')) {
+                return CachedNetworkImage(
+                  imageUrl: profileUrl,
+                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                    radius: 23,
+                    backgroundColor: const Color(0xFFF0E8F7),
+                    backgroundImage: imageProvider,
+                  ),
+                  placeholder: (context, url) => const CircleAvatar(
+                    radius: 23,
+                    backgroundColor: Color(0xFFF0E8F7),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  errorWidget: (context, url, error) => const CircleAvatar(
+                    radius: 23,
+                    backgroundColor: Color(0xFFF0E8F7),
+                    child: Icon(Icons.person, color: Colors.black87, size: 25),
+                  ),
+                );
+              } else {
+                // Local file path handling
+                final file = File(profileUrl.replaceFirst('file://', '').replaceFirst('file:/', ''));
+                return CircleAvatar(
+                  radius: 23,
+                  backgroundColor: const Color(0xFFF0E8F7),
+                  backgroundImage: FileImage(file),
+                );
+              }
             },
           ),
         ),

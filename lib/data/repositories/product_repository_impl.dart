@@ -56,6 +56,11 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<List<ProductEntity>> getOtherUserProducts(String userId) async {
+    return await remoteDataSource.getOtherUserProducts(userId);
+  }
+
+  @override
   Future<void> updateProductPrice(String productId, double newPrice) async {
     await remoteDataSource.updateProductPrice(productId, newPrice);
   }

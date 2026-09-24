@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:market/core/utils/snackbar.dart';
+import 'package:market/features/product/presentation/my_products_page.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/product_event.dart';
 import '../bloc/product_state.dart';
@@ -28,7 +30,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   String _selectedCategory = 'Electronics';
-  final List<String> _categories = ['Electronics', 'Books', 'Kitchen', 'Sports', 'Room', 'Other'];
+  final List<String> _categories = ['Electronics', 'Books', 'Kitchen', 'Sports', 'Room',];
   final List<File> _images = [];
   final List<String> _uploadedUrls = [];
   bool _isSubmitting = false;
@@ -43,18 +45,43 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Future<void> _pickImage() async {
     if (_images.length >= 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 2 images allowed'),
-          backgroundColor: Colors.black,
-        ),
-      );
+      AppSnackBar.info(context, 'You can only add up to 2 images.');
       return;
     }
 
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Take a Photo'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
       imageQuality: 70,
     );
 
@@ -74,12 +101,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
       if (_images.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select at least one image'),
-            backgroundColor: Colors.black,
-          ),
-        );
+        AppSnackBar.info(context, 'Please select at least one image');
         return;
       }
 
@@ -134,20 +156,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
         setState(() => _isSubmitting = false);
         if (mounted) {
           // Changed to show more detail for debugging on the phone
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment failed. Check your dashboard configuration or Entitlement ID.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppSnackBar.info(context, 'Payment failed. Check your dashboard configuration or Entitlement ID.');
         }
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        AppSnackBar.error(context, e.toString());
       }
     }
   }
@@ -167,12 +182,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               }
             } else if (state is ImagesError) {
               setState(() => _isSubmitting = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Image upload failed: ${state.message}'),
-                  backgroundColor: Colors.black,
-                ),
-              );
+              AppSnackBar.error(context, 'Image upload failed: ${state.message}');
             }
           },
         ),
@@ -180,24 +190,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
           listener: (context, state) {
             if (state is ProductAddedSuccess) {
               setState(() => _isSubmitting = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Product listed successfully!'),
-                  backgroundColor: Colors.black,
-                ),
+              AppSnackBar.success(context, 'Product listed successfully!');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const MyProductsPage()),
+                    (route) => false,
               );
-              Navigator.pop(context);
             } else if (state is PaymentRequired) {
               setState(() => _isSubmitting = false);
               _showPaymentDialog(state.productId);
             } else if (state is ProductError) {
               setState(() => _isSubmitting = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.black,
-                ),
-              );
+              AppSnackBar.error(context, state.message);
             }
           },
         ),

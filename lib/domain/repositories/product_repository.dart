@@ -12,6 +12,7 @@ abstract class ProductRepository {
   Future<int> getUserProductCount(String userId);
   Future<void> activateProduct(String productId);
   Future<List<ProductEntity>> getUserProducts(String userId);
+  Future<List<ProductEntity>> getOtherUserProducts(String userId);
   Future<void> updateProductPrice(String productId, double newPrice);
   Future<void> deleteProduct(String productId);
   

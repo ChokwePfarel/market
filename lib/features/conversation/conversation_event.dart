@@ -39,3 +39,5 @@ class SetActiveConversation extends ConversationsEvent {
   final String? conversationId;
   SetActiveConversation(this.conversationId);
 }
+
+class ClearConversations extends ConversationsEvent {}

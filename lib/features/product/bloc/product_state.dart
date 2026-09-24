@@ -59,6 +59,15 @@ class UserProductsLoaded extends ProductState {
   List<Object?> get props => [products];
 }
 
+class OtherUserProductsLoaded extends ProductState {
+  final List<ProductEntity> products;
+
+  const OtherUserProductsLoaded(this.products);
+
+  @override
+  List<Object?> get props => [products];
+}
+
 class ProductError extends ProductState {
   final String message;
 

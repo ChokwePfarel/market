@@ -63,6 +63,15 @@ class FetchUserProducts extends ProductEvent {
   List<Object?> get props => [userId];
 }
 
+class FetchOtherUserProducts extends ProductEvent {
+  final String userId;
+
+  const FetchOtherUserProducts(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
+
 class UpdateProductPrice extends ProductEvent {
   final String productId;
   final double newPrice;

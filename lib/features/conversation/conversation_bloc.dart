@@ -21,12 +21,35 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     on<RefreshUnreadCount>(_onRefreshUnreadCount);
     on<MarkConversationAsRead>(_onMarkAsRead);
     on<SetActiveConversation>(_onSetActiveConversation);
+    on<ClearConversations>(_onClear);
+  }
+
+  Future<void> _onClear(
+    ClearConversations event,
+    Emitter<ConversationsState> emit,
+  ) async {
+    await _subscription?.cancel();
+    _subscription = null;
+    _currentUserId = null;
+    _activeConversationId = null;
+    emit(ConversationsInitial());
   }
 
   Future<void> _onLoad(
     LoadConversations event,
     Emitter<ConversationsState> emit,
   ) async {
+    // If we are already subscribed to this user, only perform a refresh of data, don't restart listener
+    if (_currentUserId == event.currentUserId && _subscription != null) {
+      debugPrint('ConversationsBloc: Already subscribed to ${event.currentUserId}. Refreshing data...');
+      try {
+        final conversations = await _chatRepository.getConversations(event.currentUserId);
+        final unreadCount = await _chatRepository.getUnreadCount(event.currentUserId);
+        emit(ConversationsLoaded(conversations: conversations, unreadCount: unreadCount));
+      } catch (_) {}
+      return;
+    }
+
     _currentUserId = event.currentUserId; // Save for later use in updates
     final currentState = state;
     

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../domain/repositories/payment_repository.dart';
-import '../bloc/product_bloc.dart';
-import '../bloc/product_event.dart';
-import '../bloc/product_state.dart';
+import '../../../domain/entities/product_entity.dart';
+import '../bloc/my_products_bloc.dart';
 import '../../user/user_bloc.dart';
 import '../../user/user_state.dart';
 
@@ -27,7 +27,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
   void _loadProducts() {
     final userState = context.read<UserBloc>().state;
     if (userState is UserLoaded) {
-      context.read<ProductBloc>().add(FetchUserProducts(userState.user.id));
+      context.read<MyProductsBloc>().add(FetchUserProducts(userState.user.id));
     }
   }
 
@@ -37,25 +37,19 @@ class _MyProductsPageState extends State<MyProductsPage> {
       final success = await GetIt.I<PaymentRepository>().purchaseListingFee();
       if (success) {
         if (mounted) {
-          context.read<ProductBloc>().add(ActivateProductEvent(productId));
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment successful! Activating...'), backgroundColor: Colors.green),
-          );
+          context.read<MyProductsBloc>().add(ActivateMyProduct(productId));
+          AppSnackBar.success(context, 'Payment successful!');
         }
       } else {
         setState(() => _processingProductId = null);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment failed or was cancelled.')),
-          );
+          AppSnackBar.info(context, 'Payment failed or was cancelled.');
         }
       }
     } catch (e) {
       setState(() => _processingProductId = null);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        AppSnackBar.error(context, 'Try again later');
       }
     }
   }
@@ -82,37 +76,38 @@ class _MyProductsPageState extends State<MyProductsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Current price: R ${currentPrice.toStringAsFixed(2)}',
+              'Enter new price in ZAR',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 16),
-            TextFormField(
+            TextField(
               controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
-                labelText: 'New Price',
-                labelStyle: TextStyle(color: Colors.grey[600]),
                 prefixText: 'R ',
+                prefixStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey[400]!),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.black, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
           ],
@@ -143,7 +138,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
             onPressed: () {
               final newPrice = double.tryParse(controller.text.replaceAll(',', '.'));
               if (newPrice != null && newPrice > 0) {
-                context.read<ProductBloc>().add(UpdateProductPrice(productId, newPrice));
+                context.read<MyProductsBloc>().add(UpdateProductPrice(productId, newPrice));
                 Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -228,7 +223,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
               minimumSize: const Size(80, 40),
             ),
             onPressed: () {
-              context.read<ProductBloc>().add(DeleteProduct(productId));
+              context.read<MyProductsBloc>().add(DeleteProduct(productId));
               Navigator.pop(context);
             },
             child: const Text(
@@ -269,127 +264,127 @@ class _MyProductsPageState extends State<MyProductsPage> {
           ),
         ],
       ),
-      body: BlocListener<ProductBloc, ProductState>(
+      body: BlocListener<MyProductsBloc, MyProductsState>(
         listener: (context, state) {
-          if (state is ProductAddedSuccess && _processingProductId != null) {
+          if (state is MyProductActivatedSuccess && _processingProductId != null) {
             setState(() => _processingProductId = null);
-            _loadProducts(); // Refresh list to show active status
+            _loadProducts();
           }
         },
-        child: BlocBuilder<ProductBloc, ProductState>(
+        child: BlocBuilder<MyProductsBloc, MyProductsState>(
           builder: (context, state) {
-            if (state is ProductLoading && _processingProductId == null) {
+            if (state is MyProductsLoading && _processingProductId == null) {
               return const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
                 ),
               );
             }
-            // ... rest of the builder
 
-          if (state is UserProductsLoaded) {
-            if (state.products.isEmpty) {
-              return _EmptyState(
-                onRefresh: _loadProducts,
+            if (state is MyProductsLoaded) {
+              if (state.products.isEmpty) {
+                return _EmptyState(
+                  onRefresh: _loadProducts,
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _loadProducts();
+                },
+                color: Colors.black,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.products.length,
+                  itemBuilder: (context, index) {
+                    final product = state.products[index];
+                    final isProcessingThis = _processingProductId == product.id;
+
+                    return Stack(
+                      children: [
+                        _ProductCard(
+                          product: product,
+                          onEdit: () => _editPrice(product.id, product.price),
+                          onDelete: () => _confirmDelete(product.id, product.name),
+                          onPay: () => _handleRetryPayment(product.id),
+                        ),
+                        if (isProcessingThis)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(child: CircularProgressIndicator(color: Colors.black)),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               );
             }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                _loadProducts();
-              },
-              color: Colors.black,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: state.products.length,
-                itemBuilder: (context, index) {
-                  final product = state.products[index];
-                  final isProcessingThis = _processingProductId == product.id;
-
-                  return Stack(
+            if (state is MyProductsError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _ProductCard(
-                        product: product,
-                        onEdit: () => _editPrice(product.id, product.price),
-                        onDelete: () => _confirmDelete(product.id, product.name),
-                        onPay: () => _handleRetryPayment(product.id),
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.grey[400],
                       ),
-                      if (isProcessingThis)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(child: CircularProgressIndicator(color: Colors.black)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load listings',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(200, 45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
+                        onPressed: _loadProducts,
+                        child: const Text(
+                          'RETRY',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
                     ],
-                  );
-                },
-              ),
-            );
-          }
-
-          if (state is ProductError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load listings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(200, 45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: _loadProducts,
-                      child: const Text(
-                        'RETRY',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          return const SizedBox.shrink();
-        },
+            return const SizedBox.shrink();
+          },
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -414,7 +409,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Active Listings',
+              'No listings yet',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -423,30 +418,29 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'You haven\'t listed any products yet.\nCreate your first listing today!',
+              'Items you post for sale will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 15,
-                height: 1.5,
+                fontSize: 14,
+                color: Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                minimumSize: const Size(200, 45),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: onRefresh,
               child: const Text(
-                'REFRESH',
+                'REFRESH LISTINGS',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
@@ -457,9 +451,9 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// Product card widget
+// Individual product card
 class _ProductCard extends StatelessWidget {
-  final dynamic product;
+  final ProductEntity product;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onPay;
@@ -473,181 +467,197 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isActive = product.status == 'active';
     final isPending = product.status == 'pending_payment';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
+        side: BorderSide(
+          color: isPending ? Colors.orange[300]! : Colors.grey[200]!,
+          width: isPending ? 1.5 : 1,
         ),
       ),
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.all(12),
-            leading: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: product.imageUrls.isNotEmpty
-                    ? Image.network(
-                  product.imageUrls.first,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.image_not_supported,
-                      color: Colors.grey[400],
-                      size: 30,
-                    );
-                  },
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.black,
-                          ),
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      ),
-                    );
-                  },
-                )
-                    : Icon(Icons.image, color: Colors.grey[400], size: 30),
-              ),
-            ),
-            title: Text(
-              product.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: Colors.black,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
-                Text(
-                  'R ${product.price.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                const SizedBox(height: 4),
+                // Image
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.grey[200] : (isPending ? Colors.amber[100] : Colors.grey[300]),
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    product.status.toUpperCase(),
-                    style: TextStyle(
-                      color: isActive ? Colors.black : (isPending ? Colors.amber[900] : Colors.grey[700]),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: product.imageUrls.isNotEmpty
+                        ? Image.network(
+                            product.imageUrls.first,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey[400],
+                                size: 30,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey[400],
+                            size: 30,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          _StatusBadge(status: product.status),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'R ${product.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        product.category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isPending)
-                  IconButton(
-                    icon: Icon(Icons.payment_rounded, color: Colors.amber[900]),
-                    onPressed: onPay,
-                    tooltip: 'Pay to activate',
-                  ),
-                IconButton(
-                  icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
-                  onPressed: onEdit,
-                  tooltip: 'Edit price',
-                  splashRadius: 20,
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline, color: Colors.grey[700]),
-                  onPressed: onDelete,
-                  tooltip: 'Delete listing',
-                  splashRadius: 20,
-                ),
-              ],
-            ),
-          ),
-          if (product.status != 'active')
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isPending ? Colors.amber[50] : Colors.grey[50],
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                ),
-              ),
-              child: Row(
+            const Divider(height: 24),
+            // Actions
+            if (isPending)
+              Row(
                 children: [
-                  Icon(
-                    isPending ? Icons.warning_amber_rounded : Icons.info_outline,
-                    size: 16,
-                    color: isPending ? Colors.amber[900] : Colors.grey[500],
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange[800],
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: onPay,
+                      icon: const Icon(Icons.payment, size: 18),
+                      label: const Text('PAY LISTING FEE'),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      isPending
-                        ? 'Listing is hidden. Pay R20 to activate.'
-                        : 'This listing is ${product.status} and not visible to buyers',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isPending ? Colors.amber[900] : Colors.grey[600],
-                        fontWeight: isPending ? FontWeight.w600 : FontWeight.normal,
-                      ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: onDelete,
+                    tooltip: 'Delete',
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.black87),
+                    label: const Text(
+                      'Edit Price',
+                      style: TextStyle(color: Colors.black87),
                     ),
                   ),
-                  if (isPending)
-                    TextButton(
-                      onPressed: onPay,
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.amber[900],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('ACTIVATE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                    label: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
                     ),
+                  ),
                 ],
               ),
-            ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Status badge helper
+class _StatusBadge extends StatelessWidget {
+  final String status;
+
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    String label;
+
+    switch (status) {
+      case 'active':
+        color = Colors.green;
+        label = 'Active';
+        break;
+      case 'pending_payment':
+        color = Colors.orange;
+        label = 'Payment Pending';
+        break;
+      default:
+        color = Colors.grey;
+        label = status;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

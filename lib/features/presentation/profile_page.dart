@@ -64,12 +64,42 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickImage() async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Take a Photo'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 75,
     );
-    
+
     if (pickedFile != null) {
       final croppedFile = await _cropImage(pickedFile.path);
       if (croppedFile != null) {
@@ -114,6 +144,43 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _isEditing = false;
     });
+  }
+
+  Widget _buildProfileAvatar(String? profileUrl, String? localPath) {
+    if (localPath != null) {
+      return CircleAvatar(
+        radius: 64,
+        backgroundColor: Colors.grey[300],
+        backgroundImage: FileImage(File(localPath.replaceFirst('file://', ''))),
+      );
+    }
+
+    if (profileUrl == null || profileUrl.isEmpty || profileUrl.contains('com.example.market')) {
+      return CircleAvatar(
+        radius: 64,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, size: 64, color: Colors.grey[600]),
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: profileUrl,
+      imageBuilder: (context, imageProvider) => CircleAvatar(
+        radius: 64,
+        backgroundColor: Colors.grey[300],
+        backgroundImage: imageProvider,
+      ),
+      placeholder: (context, url) => CircleAvatar(
+        radius: 64,
+        backgroundColor: Colors.grey[200],
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+      errorWidget: (context, url, error) => CircleAvatar(
+        radius: 64,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, size: 64, color: Colors.grey[600]),
+      ),
+    );
   }
 
   @override
@@ -181,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () {
                             final imageToShow = _localImagePath ?? user.profileImageUrl;
                             if (imageToShow.isEmpty) return;
-                            
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -191,29 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             );
                           },
-                          child: CircleAvatar(
-                            radius: 64,
-                            backgroundColor: Colors.grey[300],
-                            backgroundImage: _localImagePath != null
-                                ? FileImage(File(_localImagePath!.replaceFirst('file://', '')))
-                                : (user.profileImageUrl.isNotEmpty && !user.profileImageUrl.contains('com.example.market')
-                                    ? (user.profileImageUrl.startsWith('http')
-                                        ? CachedNetworkImageProvider(user.profileImageUrl)
-                                            as ImageProvider
-                                        : FileImage(
-                                            File(user.profileImageUrl.replaceFirst('file://', '')),
-                                          ))
-                                    : null),
-                            child:
-                            (user.profileImageUrl.isEmpty || user.profileImageUrl.contains('com.example.market')) &&
-                                _localImagePath == null
-                                ? Icon(
-                              Icons.person,
-                              size: 64,
-                              color: Colors.grey[600],
-                            )
-                                : null,
-                          ),
+                          child: _buildProfileAvatar(user.profileImageUrl, _localImagePath),
                         ),
                         if (_isEditing)
                           Positioned(

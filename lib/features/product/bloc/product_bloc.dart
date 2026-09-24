@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/utils/offline_cache.dart';
 import '../../../domain/repositories/product_repository.dart';
@@ -12,16 +12,12 @@ import 'package:uuid/uuid.dart';
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final ProductRepository _productRepository;
   final UserRepository _userRepository;
-  final PaymentRepository _paymentRepository;
   static const int _limit = 10;
 
-  ProductBloc(this._productRepository, this._userRepository, this._paymentRepository) : super(ProductInitial()) {
+  ProductBloc(this._productRepository, this._userRepository, [PaymentRepository? paymentRepository]) : super(ProductInitial()) {
     on<FetchProducts>(_onFetchProducts);
     on<AddProduct>(_onAddProduct);
     on<ActivateProductEvent>(_onActivateProduct);
-    on<FetchUserProducts>(_onFetchUserProducts);
-    on<UpdateProductPrice>(_onUpdateProductPrice);
-    on<DeleteProduct>(_onDeleteProduct);
   }
 
   Future<void> _onFetchProducts(
@@ -85,7 +81,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         currentCategory: event.category,
       ));
       
-      debugPrint('ProductBloc: Emitted ${allProducts.length} products. First product images: ${allProducts.isNotEmpty ? allProducts.first.imageUrls : 'N/A'}');
+      debugPrint('ProductBloc: Emitted ${allProducts.length} products.');
     } catch (e) {
       debugPrint('ProductBloc: Error fetching products: $e');
       if (state is! ProductLoaded) {
@@ -104,12 +100,9 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       debugPrint('ProductBloc: Fetching user profile to check free trial status...');
       final user = await _userRepository.getUserProfile(event.sellerId);
       final bool hasFreeTrial = user.hasFreeTrial;
-      debugPrint('ProductBloc: User has free trial: $hasFreeTrial');
 
       final productId = const Uuid().v4();
-      // Use the boolean flag as the source of truth
       final String status = hasFreeTrial ? 'active' : 'pending_payment';
-      debugPrint('ProductBloc: Generated Product ID: $productId, target status: $status');
 
       final product = ProductEntity(
         id: productId,
@@ -124,27 +117,17 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         createdAt: DateTime.now(),
       );
 
-      debugPrint('ProductBloc: Calling repository.createProduct...');
       await _productRepository.createProduct(product);
-      debugPrint('ProductBloc: Repository call successful.');
 
       if (status == 'active') {
-        debugPrint('ProductBloc: status is active. User repository: $_userRepository');
-        
-        debugPrint('ProductBloc: Flipping has_free_trial to false for ${event.sellerId}');
-        
         try {
-          // Double-check: immediately flip the trial flag so they can't list another one for free
           await _userRepository.updateFreeTrialStatus(event.sellerId, false);
-          debugPrint('ProductBloc: updateFreeTrialStatus successful.');
         } catch (updateError) {
           debugPrint('ProductBloc: updateFreeTrialStatus failed: $updateError');
         }
         
-        debugPrint('ProductBloc: Emitting ProductAddedSuccess');
         emit(ProductAddedSuccess());
       } else {
-        debugPrint('ProductBloc: Emitting PaymentRequired for $productId');
         emit(PaymentRequired(productId: productId));
       }
     } catch (e) {
@@ -160,61 +143,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     debugPrint('ProductBloc: Activating product ${event.productId}');
     try {
       await _productRepository.activateProduct(event.productId);
-      debugPrint('ProductBloc: Activation successful, emitting ProductAddedSuccess');
       emit(ProductAddedSuccess());
     } catch (e) {
       debugPrint('ProductBloc: Activation error: $e');
       emit(ProductError(e.toString()));
-    }
-  }
-
-  Future<void> _onFetchUserProducts(
-    FetchUserProducts event,
-    Emitter<ProductState> emit,
-  ) async {
-    emit(ProductLoading());
-    try {
-      final products = await _productRepository.getUserProducts(event.userId);
-      emit(UserProductsLoaded(products));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
-  }
-
-  Future<void> _onUpdateProductPrice(
-    UpdateProductPrice event,
-    Emitter<ProductState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is UserProductsLoaded) {
-      final updatedProducts = currentState.products.map((p) {
-        return p.id == event.productId ? p.copyWith(price: event.newPrice) : p;
-      }).toList();
-      emit(UserProductsLoaded(updatedProducts));
-
-      try {
-        await _productRepository.updateProductPrice(event.productId, event.newPrice);
-      } catch (e) {
-        emit(ProductError(e.toString()));
-        // Optional: Revert on error
-      }
-    }
-  }
-
-  Future<void> _onDeleteProduct(
-    DeleteProduct event,
-    Emitter<ProductState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is UserProductsLoaded) {
-      final updatedProducts = currentState.products.where((p) => p.id != event.productId).toList();
-      emit(UserProductsLoaded(updatedProducts));
-
-      try {
-        await _productRepository.deleteProduct(event.productId);
-      } catch (e) {
-        emit(ProductError(e.toString()));
-      }
     }
   }
 }

@@ -14,6 +14,7 @@ abstract class ProductRemoteDataSource {
   Future<int> getUserProductCount(String userId);
   Future<void> activateProduct(String productId);
   Future<List<ProductModel>> getUserProducts(String userId);
+  Future<List<ProductModel>> getOtherUserProducts(String userId);
   Future<void> updateProductPrice(String productId, double newPrice);
   Future<void> deleteProduct(String productId);
 
@@ -118,6 +119,24 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   }
 
   @override
+  Future<List<ProductModel>> getOtherUserProducts(String userId) async {
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('seller_id', userId)
+          .eq('status', 'active')
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ProductModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch other user products: $e');
+    }
+  }
+
+  @override
   Future<void> updateProductPrice(String productId, double newPrice) async {
     try {
       await client
@@ -132,8 +151,20 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<void> deleteProduct(String productId) async {
     try {
-      await client.from('products').delete().eq('id', productId);
+      debugPrint('ProductRemoteDataSource: Calling delete-product Edge Function for $productId');
+      
+      final response = await client.functions.invoke(
+        'delete-product',
+        body: {'productId': productId},
+      );
+
+      if (response.status != 200) {
+        throw Exception(response.data['error'] ?? 'Failed to delete product and images');
+      }
+      
+      debugPrint('ProductRemoteDataSource: Product and images deleted successfully');
     } catch (e) {
+      debugPrint('ProductRemoteDataSource: Error deleting product: $e');
       throw Exception('Failed to delete product: $e');
     }
   }

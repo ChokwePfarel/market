@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:market/features/presentation/other_user_products.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../chat/chat_bloc.dart';
@@ -188,6 +189,23 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.storefront_outlined, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtherUserProducts(
+                    otherUserId: widget.conversation.otherUser.id,
+                  ),
+                ),
+              );
+            },
+            tooltip: 'View Seller Listings',
+          ),
+        ],
 
       ),
       body: Column(
@@ -397,15 +415,27 @@ class _MessageBubble extends StatelessWidget {
     }
 
     if (url.startsWith('http')) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            image: CachedNetworkImageProvider(url),
-            fit: BoxFit.cover,
+      return CachedNetworkImage(
+        imageUrl: url,
+        imageBuilder: (context, imageProvider) => Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
           ),
+        ),
+        placeholder: (context, url) => Container(
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        errorWidget: (context, url, error) => Container(
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
         ),
       );
     }
