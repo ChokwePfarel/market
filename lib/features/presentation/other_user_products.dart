@@ -21,7 +21,6 @@ class _OtherUserProductsState extends State<OtherUserProducts> {
   @override
   void initState() {
     super.initState();
-    // Fetch user details and their products
     context.read<OtherUserBloc>().add(FetchOtherUserRequested(widget.otherUserId));
     context.read<OtherUserProductsBloc>().add(FetchOtherUserProducts(widget.otherUserId));
   }
@@ -94,11 +93,11 @@ class _OtherUserProductsState extends State<OtherUserProducts> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[300]),
+          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             "No active listings found.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
           ),
         ],
       ),
@@ -118,10 +117,10 @@ class _ProductListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[100]!),
+        border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -158,7 +157,7 @@ class _ProductListItem extends StatelessWidget {
           child: Text(
             "R ${product.price.toStringAsFixed(2)}",
             style: TextStyle(
-              color: Colors.blue[700],
+              color: Colors.blue.shade700,
               fontWeight: FontWeight.w600,
               fontSize: 15,
             ),

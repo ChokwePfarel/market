@@ -113,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<CroppedFile?> _cropImage(String path) async {
     return await ImageCropper().cropImage(
       sourcePath: path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Square for avatar
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), //Square for avatar
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: 'Crop Profile Picture',
@@ -150,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (localPath != null) {
       return CircleAvatar(
         radius: 64,
-        backgroundColor: Colors.grey[300],
+        backgroundColor: Colors.grey.shade300,
         backgroundImage: FileImage(File(localPath.replaceFirst('file://', ''))),
       );
     }
@@ -211,21 +211,21 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: BlocConsumer<UserBloc, UserState>(
         listener: (context, state) {
-          debugPrint('ProfilePage: UserBloc state changed to $state');
+         // debugPrint('ProfilePage: UserBloc state changed to $state');
           if (state is UserError) {
 
             AppSnackBar.error(context, 'No Network Connection');
 
           } else if (state is UserLoaded && !_isEditing) {
-            debugPrint(
+           /* debugPrint(
               'ProfilePage: Updating controllers with ${state.user.name}',
-            );
+            );*/
             _nameController.text = state.user.name;
             _universityController.text = state.user.university;
           }
         },
         builder: (context, state) {
-          debugPrint('ProfilePage: Building with state $state');
+          //debugPrint('ProfilePage: Building with state $state');
           if (state is UserLoading) {
             return const Center(
               child: CircularProgressIndicator(
@@ -286,11 +286,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   _buildEditableField('Full Name', _nameController, _isEditing),
                   const SizedBox(height: 16),
 
-                  // Read-only university field
+                  // Read  only university field and sex
                   _buildReadOnlyField('University', user.university),
                   const SizedBox(height: 16),
 
-                  // Read-only sex field
+
                   _buildReadOnlyField('Gender', user.sex),
                   const SizedBox(height: 32),
 
@@ -397,7 +397,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-// Editable text field (for name only)
+// Editable text field (for name only)..
   Widget _buildEditableField(
       String label,
       TextEditingController controller,
@@ -444,7 +444,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-// Read-only field (for university and sex)
+// Read Only field (for university and sex)
   Widget _buildReadOnlyField(String label, String value) {
     return Container(
       width: double.infinity,

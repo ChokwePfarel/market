@@ -33,7 +33,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    
+
     // Set this conversation as active to clear unread badges in the inbox instantly
     context.read<ConversationsBloc>().add(
       SetActiveConversation(widget.conversation.id),
@@ -45,13 +45,14 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
-    
+
     // Clear the active conversation so future background messages trigger badges again
     context.read<ConversationsBloc>().add(SetActiveConversation(null));
-    
+
     super.dispose();
   }
 
+  // Load messages from the server
   void _loadMessages() {
     final userState = context.read<UserBloc>().state;
     if (userState is UserLoaded) {
@@ -64,6 +65,7 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  // Send a message to the server
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
@@ -81,6 +83,7 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  // Trigger to scroll to the bottom of the chat
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -98,7 +101,10 @@ class _ChatPageState extends State<ChatPage> {
       return Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
         child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
       );
     }
@@ -117,13 +123,18 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    final cleanPath = url.replaceFirst('file://', '').replaceFirst('file:/', '');
+    final cleanPath = url
+        .replaceFirst('file://', '')
+        .replaceFirst('file:/', '');
     final file = File(cleanPath);
 
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
       child: FutureBuilder<bool>(
         future: file.exists(),
         builder: (context, snapshot) {
@@ -132,7 +143,8 @@ class _ChatPageState extends State<ChatPage> {
               child: Image.file(
                 file,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: Colors.grey, size: size * 0.6),
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.person, color: Colors.grey, size: size * 0.6),
               ),
             );
           }
@@ -168,7 +180,10 @@ class _ChatPageState extends State<ChatPage> {
                   );
                 }
               },
-              child: _buildAvatar(widget.conversation.otherUser.profileImageUrl, size: 40),
+              child: _buildAvatar(
+                widget.conversation.otherUser.profileImageUrl,
+                size: 40,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -206,7 +221,6 @@ class _ChatPageState extends State<ChatPage> {
             tooltip: 'View Seller Listings',
           ),
         ],
-
       ),
       body: Column(
         children: [
@@ -242,13 +256,15 @@ class _ChatPageState extends State<ChatPage> {
                     itemBuilder: (context, index) {
                       final message = state.messages[index];
                       final userState = context.read<UserBloc>().state;
-                      final isMe = userState is UserLoaded &&
+                      final isMe =
+                          userState is UserLoaded &&
                           message.senderId != widget.conversation.otherUser.id;
 
                       return _MessageBubble(
                         message: message,
                         isMe: isMe,
-                        otherUserImageUrl: widget.conversation.otherUser.profileImageUrl,
+                        otherUserImageUrl:
+                            widget.conversation.otherUser.profileImageUrl,
                       );
                     },
                   );
@@ -341,7 +357,9 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!isMe)
             Padding(
@@ -350,12 +368,9 @@ class _MessageBubble extends StatelessWidget {
             ),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? Colors.black : Colors.grey[100],
+                color: isMe ? Colors.black : Colors.grey.shade100,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -384,7 +399,7 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         _formatTime(message.createdAt),
                         style: TextStyle(
-                          color: isMe ? Colors.white70 : Colors.grey[600],
+                          color: isMe ? Colors.white70 : Colors.grey.shade600,
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
                         ),
@@ -409,7 +424,10 @@ class _MessageBubble extends StatelessWidget {
       return Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
         child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
       );
     }
@@ -428,26 +446,37 @@ class _MessageBubble extends StatelessWidget {
         placeholder: (context, url) => Container(
           width: size,
           height: size,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
         errorWidget: (context, url, error) => Container(
           width: size,
           height: size,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
           child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
         ),
       );
     }
 
-    final String cleanPath = url.replaceFirst('file://', '').replaceFirst('file:/', '');
+    final String cleanPath = url
+        .replaceFirst('file://', '')
+        .replaceFirst('file:/', '');
 
     // SAFETY: If the path belongs to the old package name, it's dead. Ignore it.
     if (cleanPath.contains('com.example.market')) {
       return Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
         child: Icon(Icons.person, color: Colors.grey, size: size * 0.6),
       );
     }
@@ -457,7 +486,10 @@ class _MessageBubble extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF1F1F5)),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
       child: FutureBuilder<bool>(
         future: file.exists(),
         builder: (context, snapshot) {
@@ -493,31 +525,21 @@ class _MessageBubble extends StatelessWidget {
       );
     }
     if (message.status == MessageStatus.error) {
-      return const Icon(
-        Icons.error_outline,
-        size: 12,
-        color: Colors.redAccent,
-      );
+      return const Icon(Icons.error_outline, size: 12, color: Colors.redAccent);
     }
 
-    // For "sent" or "delivered" logic
+    // For "sent" or "delivered" logic.
+
     if (message.isRead) {
-      return const Icon(
-        Icons.done_all,
-        size: 14,
-        color: Colors.white70,
-      );
+      return const Icon(Icons.done_all, size: 14, color: Colors.white70);
     }
 
-    return const Icon(
-      Icons.done,
-      size: 14,
-      color: Colors.white70,
-    );
+    return const Icon(Icons.done, size: 14, color: Colors.white70);
   }
 }
 
 // Empty chat state widget
+
 class _EmptyChatState extends StatelessWidget {
   final String userName;
 
@@ -552,10 +574,7 @@ class _EmptyChatState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Start a conversation with $userName',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 15,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 15),
               textAlign: TextAlign.center,
             ),
           ],
@@ -583,26 +602,17 @@ class _MessageInput extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
       ),
       child: Row(
         children: [
-
           Expanded(
             child: TextField(
               controller: controller,
               focusNode: focusNode,
               decoration: InputDecoration(
                 hintText: 'Type a message...',
-                hintStyle: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 15,
-                ),
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -614,10 +624,7 @@ class _MessageInput extends StatelessWidget {
                   vertical: 10,
                 ),
               ),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.black, fontSize: 15),
               maxLines: null,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => onSend(),

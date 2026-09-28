@@ -21,19 +21,18 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     LoadUserSubscription event,
     Emitter<UserState> emit,
   ) async {
-    // We use emit.forEach to stay reactive and avoid 'emit after complete' errors
+
+    // We use emit.forEach to stay reactive and avoid 'emit after complete' errors.
+
     return emit.forEach<UserEntity?>(
       _userRepository.watchCurrentUser(),
       onData: (user) {
         if (user != null) {
-          debugPrint('UserBloc: LoadUserSubscription - User loaded: ${user.name}');
           return UserLoaded(user);
         }
-        debugPrint('UserBloc: LoadUserSubscription - User is null');
         return UserInitial();
       },
       onError: (error, stackTrace) {
-        debugPrint('UserBloc: Error in watchCurrentUser: $error');
         return UserError(error.toString());
       },
     );
@@ -43,7 +42,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     CreateUser event,
     Emitter<UserState> emit,
   ) async {
-    debugPrint('UserBloc: _onCreateUser started');
     emit(UserLoading());
     try {
       await _userRepository.createUser(
@@ -54,13 +52,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
         isVerified: event.isVerified,
         profileImageUrl: event.profileImageUrl,
       );
-      
-      // Use watchCurrentUser or specifically load it if needed
-      // But watchCurrentUser is usually better as it's already running
-      // We can just wait for the first non-null emission if we want to be safe
-      // For now, let's load it manually with the current ID if possible
-      
-      debugPrint('UserBloc: User created, reloading subscription');
+
       add(const WatchCurrentUser());
 
     } catch (e) {
@@ -79,15 +71,12 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       _userRepository.watchCurrentUser(),
       onData: (user) {
         if (user != null) {
-          debugPrint('UserBloc: WatchCurrentUser - User loaded: ${user.name}');
           return UserLoaded(user);
         }
-        debugPrint('UserBloc: WatchCurrentUser - User is null');
         return UserInitial();
       },
       onError: (error, stackTrace) {
         return UserError(error.toString());
-        debugPrint('UserBloc: Error in watchCurrentUser: $error');
       },
     );
   }
@@ -102,7 +91,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(UserLoaded(user));
     } catch (e) {
       emit(UserError(e.toString()));
-      debugPrint('UserBloc: Error loading user profile: $e');
     }
   }
 
@@ -128,7 +116,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
         await _userRepository.updateUserProfile(updatedUser, localImagePath: event.localImagePath);
       } catch (e) {
         // Revert on failure
-        emit(UserError('Failed to update profile. Reverting changes.'));
         emit(UserLoaded(previousUser));
       }
     }

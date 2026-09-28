@@ -5,15 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../core/custom/Header.dart';
+import '../../core/custom/product_card.dart';
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
 import '../conversation/conversation_state.dart';
 import '../product/bloc/product_bloc.dart';
 import '../product/bloc/product_event.dart';
 import '../product/bloc/product_state.dart';
-import '../product/presentation/add_product_screen.dart';
-import '../product/presentation/my_products_page.dart';
-import '../search/presentation/search_page.dart';
+import 'add_product_screen.dart';
+import 'my_products_page.dart';
+import 'search_page.dart';
 import '../user/user_event.dart';
 import 'detailed_product_page.dart';
 import 'inbox_page.dart';
@@ -30,9 +32,12 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
   final _scrollController = ScrollController();
-  String _selectedCategory = 'Electronics';
+
+  String _selectedCategory = 'Electronics'; //Default
+
   final List<String> _categories = [
     'Electronics',
     'Books',
@@ -49,14 +54,14 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // Trigger initial fetch only if data isn't already loaded
+    // Trigger initial fetch only if data isnt already loaded.
+    //...
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final productBloc = context.read<ProductBloc>();
       final userState = context.read<UserBloc>().state;
-      
+
       if (userState is UserLoaded) {
         if (productBloc.state is ProductInitial) {
-          debugPrint('HomeScreen: Initial fetch for ${userState.user.university}');
           productBloc.add(
             FetchProducts(
               university: userState.user.university,
@@ -64,10 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
               isRefresh: true,
             ),
           );
-        } else {
-          debugPrint('HomeScreen: Data already exists in Bloc, skipping full refresh');
-        }
-        
+        } else {}
         context.read<ConversationsBloc>().add(
           LoadConversations(userState.user.id),
         );
@@ -75,12 +77,6 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         context.read<UserBloc>().add(const WatchCurrentUser());
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _onScroll() {
@@ -144,9 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
           });
         },
         backgroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
@@ -161,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                     color: Colors.orange,
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: const Text(
-                      'Offline Mode — Showing Cached Data',
+                      'Offline',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -180,7 +174,8 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
               child: BlocListener<UserBloc, UserState>(
                 listenWhen: (previous, current) {
                   // Only re-fetch if university has changed or if we just logged in
-                  if (previous is! UserLoaded && current is UserLoaded) return true;
+                  if (previous is! UserLoaded && current is UserLoaded)
+                    return true;
                   if (previous is UserLoaded && current is UserLoaded) {
                     return previous.user.university != current.user.university;
                   }
@@ -188,8 +183,10 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                 },
                 listener: (context, state) {
                   if (state is UserLoaded) {
-                    debugPrint('HomeScreen: User loaded/updated. Syncing data...');
-                    
+                    debugPrint(
+                      'HomeScreen: User loaded/updated. Syncing data...',
+                    );
+
                     // 1. Fetch products
                     context.read<ProductBloc>().add(
                       FetchProducts(
@@ -227,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                       // ------------------------------------------------
                       // STATIC HEADER / SEARCH / CATEGORIES
                       // ------------------------------------------------
-                      _buildHeader(context),
+                      Header(),
                       const SizedBox(height: 24),
                       _buildSearchBar(context),
                       const SizedBox(height: 24),
@@ -245,13 +242,11 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
 
                       const SizedBox(height: 18),
 
-                      // ------------------------------------------------
-                      // DYNAMIC PRODUCT SECTION
-                      // ------------------------------------------------
                       BlocBuilder<ProductBloc, ProductState>(
                         builder: (context, state) {
                           if (state is ProductInitial ||
-                              (state is ProductLoading && state is! ProductLoaded)) {
+                              (state is ProductLoading &&
+                                  state is! ProductLoaded)) {
                             return _buildShimmerGrid();
                           }
 
@@ -295,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                                       ),
                                   itemBuilder: (context, index) {
                                     final product = state.products[index];
-                                    return _buildProductCard(context, product);
+                                    return ProductCard(product: product);
                                   },
                                 ),
 
@@ -346,134 +341,6 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        // Profile
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfilePage()),
-            );
-          },
-          child: BlocBuilder<UserBloc, UserState>(
-            builder: (context, state) {
-              String? profileUrl;
-              if (state is UserLoaded) {
-                profileUrl = state.user.profileImageUrl;
-              }
-
-              final bool hasImage = profileUrl != null && profileUrl.isNotEmpty;
-
-              if (!hasImage) {
-                return const CircleAvatar(
-                  radius: 23,
-                  backgroundColor: Color(0xFFF0E8F7),
-                  child: Icon(Icons.person, color: Colors.black87, size: 25),
-                );
-              }
-
-              if (profileUrl!.startsWith('http')) {
-                return CachedNetworkImage(
-                  imageUrl: profileUrl,
-                  imageBuilder: (context, imageProvider) => CircleAvatar(
-                    radius: 23,
-                    backgroundColor: const Color(0xFFF0E8F7),
-                    backgroundImage: imageProvider,
-                  ),
-                  placeholder: (context, url) => const CircleAvatar(
-                    radius: 23,
-                    backgroundColor: Color(0xFFF0E8F7),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  errorWidget: (context, url, error) => const CircleAvatar(
-                    radius: 23,
-                    backgroundColor: Color(0xFFF0E8F7),
-                    child: Icon(Icons.person, color: Colors.black87, size: 25),
-                  ),
-                );
-              } else {
-                // Local file path handling
-                final file = File(profileUrl.replaceFirst('file://', '').replaceFirst('file:/', ''));
-                return CircleAvatar(
-                  radius: 23,
-                  backgroundColor: const Color(0xFFF0E8F7),
-                  backgroundImage: FileImage(file),
-                );
-              }
-            },
-          ),
-        ),
-
-        const Spacer(),
-
-        // Notification
-        BlocBuilder<ConversationsBloc, ConversationsState>(
-          builder: (context, state) {
-            int unreadCount = 0;
-
-            if (state is ConversationsLoaded) {
-              unreadCount = state.unreadCount;
-            }
-
-            return IconButton(
-              onPressed: () {
-                final userState = context.read<UserBloc>().state;
-
-                if (userState is UserLoaded) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          InboxPage(currentUserId: userState.user.id),
-                    ),
-                  );
-                }
-              },
-              style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFFF9F9F9),
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(12),
-              ),
-              icon: Badge(
-                isLabelVisible: unreadCount > 0,
-                label: Text(unreadCount.toString()),
-                child: const Icon(
-                  CupertinoIcons.bell, // outlined bell
-                  size: 25,
-                  color: Colors.black87,
-                ),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(width: 6),
-
-        // Cart
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MyProductsPage() ),
-            );
-          },
-          style: IconButton.styleFrom(
-            backgroundColor: const Color(0xFFF9F9F9),
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(12),
-          ),
-          icon: const Icon(
-            CupertinoIcons.bag,
-            size: 25,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSearchBar(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -485,9 +352,9 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       child: Container(
         height: 54,
         decoration: BoxDecoration(
-          color: const Color(0xFFF7F7F7),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFFEDEDED)),
+          border: Border.all(color: Colors.white),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(
@@ -544,89 +411,9 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     );
   }
 
-  Widget _buildProductCard(BuildContext context, dynamic product) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailsScreen(product: product),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFEAEAEA)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product image
-            Expanded(
-              flex: 7,
-              child: Container(
-                width: double.infinity,
-                color: const Color(0xFFF4F4F4),
-                child: product.imageUrls.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: product.imageUrls.first,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        errorWidget: (context, url, error) {
-                          debugPrint('HomeScreen: Error loading image: $error');
-                          return const Icon(Icons.broken_image, color: Colors.grey);
-                        },
-                      )
-                    : const Center(
-                        child: Icon(
-                          Icons.image_outlined,
-                          size: 40,
-                          color: Colors.grey,
-                        ),
-                      ),
-              ),
-            ),
-
-            // Product information
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    Text(
-                      'R ${product.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,8 +72,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
-
                 _pillField(
                   controller: _passwordController,
                   hint: 'New Password',
@@ -96,7 +93,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       height: 52,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:Colors.black,
+                          backgroundColor: Colors.black,
                           shape: const StadiumBorder(),
                           elevation: 0,
                         ),
@@ -141,18 +138,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.black),
 
-
-
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(color: Colors.black, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(color: Colors.black, width: 2),
-          ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Colors.black, width: 1.5),
         ),
-
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
+        ),
+      ),
     );
   }
 }

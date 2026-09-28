@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/custom/CustDropDown.dart';
 import '../../core/utils/snackbar.dart';
 import '../user/user_bloc.dart';
 import '../user/user_event.dart';
@@ -21,6 +22,7 @@ class CreateAccountProfilePage extends StatefulWidget {
 class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+
   String _selectedSex = 'Male';
   final List<String> sexes = ['Male', 'Female'];
   String? _localImagePath;
@@ -51,13 +53,10 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
     "Mangosuthu University of Technology",
     "Walter Sisulu University",
   ];
+
   late String _selectedUniversity = universities.first;
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
+
 
   Future<void> _pickImage() async {
     try {
@@ -106,7 +105,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
         }
       }
     } catch (e) {
-      debugPrint('Error picking image: $e');
+     // debugPrint('Error picking image: $e');
       if (mounted) {
         AppSnackBar.error(context, 'Failed to pick image');
       }
@@ -133,6 +132,8 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
     );
   }
 
+
+  //Save profile
   void _submit() {
     if (_formKey.currentState!.validate()) {
       context.read<UserBloc>().add(
@@ -158,6 +159,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
+
       body: BlocListener<UserBloc, UserState>(
         listener: (context, state) {
           if (state is UserLoaded) {
@@ -182,7 +184,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
                       children: [
                         CircleAvatar(
                           radius: 60,
-                          backgroundColor: Colors.grey[200],
+                          backgroundColor: Colors.grey.shade200,
                           backgroundImage: _localImagePath != null
                               ? FileImage(File(_localImagePath!))
                               : null,
@@ -206,6 +208,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 32),
                 
                 TextFormField(
@@ -255,6 +258,9 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
 
                 const SizedBox(height: 10),
 
+                //Universities have long texts, so i use a custom dropdown widget
+                //to fix the overflow error
+
                 CustomDropdown<String>(
                   labelText: 'University',
                   items: universities,
@@ -289,5 +295,11 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 }

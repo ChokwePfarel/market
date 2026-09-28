@@ -31,8 +31,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
     await completer.future;
     
-    // The Emitter checks if it's still active. If a new event came in, 
-    // the previous one's execution will continue but we should check state.
+    //The Emitter checks if it's still active. If a new event came in,
+    //the previous one's execution will continue but we should check state.
     if (emit.isDone) return;
     
     emit(SearchLoading());

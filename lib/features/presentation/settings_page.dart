@@ -15,9 +15,9 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+
+
         title: const Text(
           'Log Out',
           style: TextStyle(
@@ -28,25 +28,20 @@ class SettingsPage extends StatelessWidget {
         ),
         content: const Text(
           'Are you sure you want to sign out?',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 15,
-          ),
+          style: TextStyle(color: Colors.black87, fontSize: 15),
         ),
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
             child: const Text(
               'CANCEL',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.5),
             ),
           ),
+
+
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -54,18 +49,13 @@ class SettingsPage extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
+                (route) => false,
               );
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.black,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.black),
             child: const Text(
               'LOG OUT',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.5),
             ),
           ),
         ],
@@ -97,10 +87,7 @@ class SettingsPage extends StatelessWidget {
             children: [
               const Text(
                 'Are you sure you want to delete your account?',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 15,
-                ),
+                style: TextStyle(color: Colors.black87, fontSize: 15),
               ),
 
               const SizedBox(height: 12),
@@ -110,26 +97,20 @@ class SettingsPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.grey.shade200, width: 1),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.warning_amber_outlined,
-                      color: Colors.grey[700],
+                      color: Colors.grey.shade700,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
                         'This action is permanent and cannot be undone.',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: Colors.black87, fontSize: 13),
                       ),
                     ),
                   ],
@@ -140,9 +121,7 @@ class SettingsPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey[700],
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
               child: const Text(
                 'CANCEL',
                 style: TextStyle(
@@ -157,9 +136,7 @@ class SettingsPage extends StatelessWidget {
                 context.read<AuthBloc>().add(LogoutRequested());
                 _launchDelete();
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.black,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.black),
               child: const Text(
                 'DELETE',
                 style: TextStyle(
@@ -169,7 +146,10 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ],
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
         );
       },
     );
@@ -186,7 +166,7 @@ class SettingsPage extends StatelessWidget {
         throw 'Could not launch $deleteUrl';
       }
     } catch (e) {
-      // Handle error silently or show a snackbar
+   //
     }
   }
 
@@ -201,7 +181,7 @@ class SettingsPage extends StatelessWidget {
         throw 'Could not launch $privacyPolicyUrl';
       }
     } catch (e) {
-      // Handle error silently or show a snackbar
+      //
     }
   }
 
@@ -213,11 +193,7 @@ class SettingsPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.black,
-            size: 20,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -239,12 +215,9 @@ class SettingsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.grey.shade200, width: 1),
                 ),
                 child: Row(
                   children: [
@@ -315,6 +288,7 @@ class SettingsPage extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
+
                     // Account Section Title
                     _buildSectionTitle('Account'),
 
@@ -367,10 +341,7 @@ class SettingsPage extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         '© 2026 Student Market. All rights reserved.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[400],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
                       ),
                     ),
                   ],
@@ -391,7 +362,7 @@ class SettingsPage extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Colors.grey[500],
+          color: Colors.grey.shade500,
           letterSpacing: 0.8,
         ),
       ),
@@ -411,16 +382,10 @@ class SettingsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 4,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 40,
           height: 40,
@@ -428,11 +393,7 @@ class SettingsPage extends StatelessWidget {
             color: Colors.grey[50],
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 22,
-          ),
+          child: Icon(icon, color: iconColor, size: 22),
         ),
         title: Text(
           title,
@@ -444,17 +405,10 @@ class SettingsPage extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-            color: Colors.grey[500],
-            fontSize: 13,
-          ),
+          style: TextStyle(color: Colors.grey[500], fontSize: 13),
         ),
         trailing: showChevron
-            ? Icon(
-          Icons.chevron_right,
-          color: Colors.grey[400],
-          size: 20,
-        )
+            ? Icon(Icons.chevron_right, color: Colors.grey[400], size: 20)
             : null,
         onTap: onTap,
         isThreeLine: false,

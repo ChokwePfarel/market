@@ -47,6 +47,9 @@ class OtherUserProductsError extends OtherUserProductsState {
   List<Object?> get props => [message];
 }
 
+
+//TODO MOVE THIS TO ANOTHER FILE AFTER TEXTING,,, .
+
 // --- BLOC ---
 class OtherUserProductsBloc extends Bloc<OtherUserProductsEvent, OtherUserProductsState> {
   final ProductRepository _productRepository;

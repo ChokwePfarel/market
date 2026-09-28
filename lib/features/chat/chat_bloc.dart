@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
-
 import '../../core/utils/offline_cache.dart';
 import '../../data/models/message_model.dart';
 import '../../domain/entities/message_entity.dart';
@@ -36,7 +34,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     });
   }
 
-  // ─── Load Messages ─────────────────────────────────────────────────────────
 
   Future<void> _onLoadMessages(
       LoadMessages event,
@@ -52,7 +49,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final combined = _merge(cachedMessages, queuedMessages);
       emit(ChatLoaded(messages: combined));
     } else {
-      // Avoid emitting loading if we already have something to show
+      // AvoidING emitting loading if we already have something to show
       emit(ChatLoading());
     }
 
@@ -82,15 +79,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           .listen((message) => add(MessageReceived(message)));
           
     } catch (e) {
-      debugPrint('ChatBloc: Error loading messages: $e');
-      // Only emit error if we don't have cached messages
+      // Only emit error if we don't have cached messages..
       if (state is! ChatLoaded) {
         emit(ChatError(e.toString()));
       }
     }
   }
 
-  // ─── Send Message ──────────────────────────────────────────────────────────
 
   Future<void> _onSendMessage(
       SendMessage event,
@@ -130,7 +125,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  // ─── Resend Queued Messages ────────────────────────────────────────────────
 
   Future<void> _onResendQueued(
       ResendQueuedMessages event,
@@ -151,7 +145,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  // ─── Update Message Status ─────────────────────────────────────────────────
 
   void _onUpdateStatus(
       UpdateMessageStatus event,
@@ -167,7 +160,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(current.copyWith(messages: updated));
   }
 
-  // ─── Delete Message ────────────────────────────────────────────────────────
 
   Future<void> _onDeleteMessage(
       deleteMessage event,
@@ -183,11 +175,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       await _chatRepository.deleteMessage(event.messageId);
     } catch (e) {
-      // Revert or show error if deletion fails
+      // Revert on failure
+      emit(current.copyWith(messages: current.messages));
     }
   }
 
-  // ─── Message Received ──────────────────────────────────────────────────────
 
   void _onMessageReceived(
       MessageReceived event,
@@ -198,7 +190,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     final List<MessageEntity> updated = List.from(current.messages);
 
-    // 1. Handle potential temp message removal
+    //Handle potential temp message removal
     bool removedTemp = false;
     updated.removeWhere((m) {
       if (!removedTemp &&
@@ -211,20 +203,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return false;
     });
 
-    // 2. Add or UPDATE the message in the list
+    //Add or UPDATE the message in the list
     final existingIndex = updated.indexWhere((m) => m.id == event.message.id);
     if (existingIndex != -1) {
-      debugPrint('ChatBloc: Updating existing message: ${event.message.id}');
+      //debugPrint('ChatBloc: Updating existing message: ${event.message.id}');
       updated[existingIndex] = event.message;
     } else {
-      debugPrint('ChatBloc: Adding new message: ${event.message.id}');
+      //debugPrint('ChatBloc: Adding new message: ${event.message.id}');
       updated.add(event.message);
     }
 
     updated.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     emit(current.copyWith(messages: updated));
 
-    // 3. Mark as read logic
+    //Mark as read logic
     if (_currentUserId != null && _conversationId != null && event.message.senderId != _currentUserId) {
        _chatRepository.markAsRead(_conversationId!, _currentUserId!);
     }

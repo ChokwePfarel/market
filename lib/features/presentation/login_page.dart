@@ -6,11 +6,6 @@ import '../../core/utils/snackbar.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_event.dart';
 import '../auth/auth_state.dart';
-
-import '../user/user_bloc.dart';
-import '../user/user_event.dart';
-import '../user/user_state.dart';
-import 'home_screen.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,7 +19,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
 
   @override
   void dispose() {
@@ -44,7 +38,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,8 +51,7 @@ class _LoginPageState extends State<LoginPage> {
               type: SnackBarType.warning,
             );
           }
-          // Note: We no longer handle navigation here. 
-          // RootGate in app.dart handles all auth-related navigation.
+
         },
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
@@ -72,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
                     const SizedBox(height: 40),
                     TextFormField(
                       controller: _emailController,
@@ -80,10 +71,14 @@ class _LoginPageState extends State<LoginPage> {
                       decoration: InputDecoration(
                         labelText: 'University Email',
                         prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) => (value == null || value.isEmpty) ? 'Enter email' : null,
+                      validator: (value) => (value == null || value.isEmpty)
+                          ? 'Enter email'
+                          : null,
                     ),
 
                     const SizedBox(height: 16),
@@ -94,10 +89,14 @@ class _LoginPageState extends State<LoginPage> {
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       obscureText: false,
-                      validator: (value) => (value == null || value.isEmpty) ? 'Enter password' : null,
+                      validator: (value) => (value == null || value.isEmpty)
+                          ? 'Enter password'
+                          : null,
                     ),
 
                     const SizedBox(height: 32),
@@ -110,18 +109,31 @@ class _LoginPageState extends State<LoginPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                         child: isLoading
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
-                            : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            : const Text(
+                                'Log In',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
+
                     const SizedBox(height: 24),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -131,10 +143,15 @@ class _LoginPageState extends State<LoginPage> {
                               ? null
                               : () {
                                   Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(builder: (_) => const SignupPage()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const SignupPage(),
+                                    ),
                                   );
                                 },
-                          child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
@@ -143,11 +160,13 @@ class _LoginPageState extends State<LoginPage> {
                           ? null
                           : () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const RequestPasswordReset()),
+                                MaterialPageRoute(
+                                  builder: (_) => const RequestPasswordReset(),
+                                ),
                               );
                             },
                       child: const Text('Forgot Password?'),
-                    )
+                    ),
                   ],
                 ),
               ),

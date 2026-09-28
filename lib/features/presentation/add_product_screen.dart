@@ -3,19 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:market/core/utils/snackbar.dart';
-import 'package:market/features/product/presentation/my_products_page.dart';
-import '../bloc/product_bloc.dart';
-import '../bloc/product_event.dart';
-import '../bloc/product_state.dart';
-import '../../images/bloc/images_bloc.dart';
-import '../../images/bloc/images_event.dart';
-import '../../images/bloc/images_state.dart';
-import '../../user/user_bloc.dart';
-import '../../user/user_state.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../domain/repositories/payment_repository.dart';
+import 'package:market/features/presentation/my_products_page.dart';
+import '../product/bloc/product_bloc.dart';
+import '../product/bloc/product_event.dart';
+import '../product/bloc/product_state.dart';
+import '../images/bloc/images_bloc.dart';
+import '../images/bloc/images_event.dart';
+import '../images/bloc/images_state.dart';
+import '../user/user_bloc.dart';
+import '../user/user_state.dart';
+import '../../domain/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
-
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -30,7 +28,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   String _selectedCategory = 'Electronics';
-  final List<String> _categories = ['Electronics', 'Books', 'Kitchen', 'Sports', 'Room',];
+
+  //I SHOULD MOVE THIS SO IT CAN BE SHARED ACROSS MULTIPLE SCREENS
+  final List<String> _categories = [
+    'Electronics',
+    'Books',
+    'Kitchen',
+    'Sports',
+    'Room',
+  ];
   final List<File> _images = [];
   final List<String> _uploadedUrls = [];
   bool _isSubmitting = false;
@@ -43,6 +49,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     super.dispose();
   }
 
+  //Pic images
   Future<void> _pickImage() async {
     if (_images.length >= 2) {
       AppSnackBar.info(context, 'You can only add up to 2 images.');
@@ -92,12 +99,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  //Remove seleted images
   void _removeImage(int index) {
     setState(() {
       _images.removeAt(index);
     });
   }
 
+  //Upload and sell
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
       if (_images.isEmpty) {
@@ -117,16 +126,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void _uploadNextImage(String userId, int index) {
     if (index < _images.length) {
       context.read<ImagesBloc>().add(
-        UploadProductImage(
-          userId: userId,
-          image: _images[index],
-        ),
+        UploadProductImage(userId: userId, image: _images[index]),
       );
     } else {
       _createProduct();
     }
   }
 
+  //
   void _createProduct() {
     final userState = context.read<UserBloc>().state;
     if (userState is UserLoaded) {
@@ -144,6 +151,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  //Triger
   Future<void> _handlePayment(String productId) async {
     setState(() => _isSubmitting = true);
     try {
@@ -156,7 +164,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         setState(() => _isSubmitting = false);
         if (mounted) {
           // Changed to show more detail for debugging on the phone
-          AppSnackBar.info(context, 'Payment failed. Check your dashboard configuration or Entitlement ID.');
+          AppSnackBar.info(context, 'Payment failed.');
         }
       }
     } catch (e) {
@@ -174,7 +182,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         BlocListener<ImagesBloc, ImagesState>(
           listener: (context, state) {
             if (state is ImageOperationSuccess && state.image != null) {
-              debugPrint('AddProductScreen: Image uploaded. URL: ${state.image!.url}');
+              //debugPrint('AddProductScreen: Image uploaded. URL: ${state.image!.url}');
               _uploadedUrls.add(state.image!.url);
               final userState = context.read<UserBloc>().state;
               if (userState is UserLoaded) {
@@ -182,7 +190,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
               }
             } else if (state is ImagesError) {
               setState(() => _isSubmitting = false);
-              AppSnackBar.error(context, 'Image upload failed: ${state.message}');
+              AppSnackBar.error(
+                context,
+                'Image upload failed: ${state.message}',
+              );
             }
           },
         ),
@@ -194,7 +205,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const MyProductsPage()),
-                    (route) => false,
+                (route) => false,
               );
             } else if (state is PaymentRequired) {
               setState(() => _isSubmitting = false);
@@ -229,7 +240,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
           builder: (context, productState) {
             return BlocBuilder<ImagesBloc, ImagesState>(
               builder: (context, imageState) {
-                final isLoading = _isSubmitting ||
+                final isLoading =
+                    _isSubmitting ||
                     productState is ProductLoading ||
                     imageState is ImagesLoading;
 
@@ -249,8 +261,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           label: 'Product Name',
                           hint: 'Enter product name',
                           enabled: !isLoading,
-                          validator: (value) =>
-                          value?.isEmpty ?? true ? 'Please enter a product name' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? 'Please enter a product name'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
@@ -261,8 +274,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           hint: 'Describe your product',
                           enabled: !isLoading,
                           maxLines: 4,
-                          validator: (value) =>
-                          value?.isEmpty ?? true ? 'Please enter a description' : null,
+                          validator: (value) => value?.isEmpty ?? true
+                              ? 'Please enter a description'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
@@ -272,7 +286,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           label: 'Price',
                           hint: '0.00',
                           enabled: !isLoading,
-                          keyboardType: TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           prefixText: 'R ',
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
@@ -398,20 +414,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(
-              _images[index],
-              fit: BoxFit.cover,
-            ),
+            child: Image.file(_images[index], fit: BoxFit.cover),
           ),
           Positioned(
             top: 8,
@@ -424,11 +434,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   color: Colors.black,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
           ),
@@ -452,10 +458,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       enabled: enabled,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 15,
-      ),
+      style: const TextStyle(color: Colors.black, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
@@ -463,10 +466,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           fontWeight: FontWeight.w500,
         ),
         hintText: hint,
-        hintStyle: TextStyle(
-          color: Colors.grey[400],
-          fontSize: 14,
-        ),
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
         prefixText: prefixText,
         prefixStyle: const TextStyle(
           color: Colors.black,
@@ -474,38 +474,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.grey[400]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[400]!, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Colors.black,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Colors.black,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: Colors.black, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Colors.black,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.grey[300]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[300]!, width: 1.5),
         ),
         filled: true,
         fillColor: enabled ? Colors.white : Colors.grey[50],
@@ -526,14 +511,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
           value: c,
           child: Text(
             c,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 15,
-            ),
+            style: const TextStyle(color: Colors.black, fontSize: 15),
           ),
         );
       }).toList(),
-      onChanged: isLoading ? null : (val) => setState(() => _selectedCategory = val!),
+      onChanged: isLoading
+          ? null
+          : (val) => setState(() => _selectedCategory = val!),
       decoration: InputDecoration(
         labelText: 'Category',
         labelStyle: TextStyle(
@@ -542,24 +526,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.grey[400]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[400]!, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Colors.black,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.grey[300]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[300]!, width: 1.5),
         ),
         filled: true,
         fillColor: isLoading ? Colors.grey[50] : Colors.white,
@@ -569,14 +544,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
       ),
       dropdownColor: Colors.white,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 15,
-      ),
-      icon: Icon(
-        Icons.keyboard_arrow_down,
-        color: Colors.grey[600],
-      ),
+      style: const TextStyle(color: Colors.black, fontSize: 15),
+      icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
       isExpanded: true,
     );
   }
@@ -588,29 +557,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 54),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
         disabledBackgroundColor: Colors.grey[300],
       ),
       child: isLoading
           ? const SizedBox(
-        height: 24,
-        width: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
           : const Text(
-        'LIST PRODUCT',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.0,
-        ),
-      ),
+              'LIST PRODUCT',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+              ),
+            ),
     );
   }
 

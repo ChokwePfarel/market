@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../presentation/detailed_product_page.dart';
-import '../../user/user_bloc.dart';
-import '../../user/user_state.dart';
-import '../bloc/search_bloc.dart';
-import '../bloc/search_event.dart';
-import '../bloc/search_state.dart';
+import 'detailed_product_page.dart';
+import '../user/user_bloc.dart';
+import '../user/user_state.dart';
+import '../search/bloc/search_bloc.dart';
+import '../search/bloc/search_event.dart';
+import '../search/bloc/search_state.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -62,7 +62,7 @@ class _SearchPageState extends State<SearchPage> {
         title: Container(
           height: 46,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
           ),
           child: TextField(
@@ -141,7 +141,7 @@ class _SearchPageState extends State<SearchPage> {
                       Text(
                         '${state.products.length} results',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: Colors.grey.shade100,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),

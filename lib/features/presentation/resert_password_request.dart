@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,7 +20,6 @@ class _RequestPasswordResetState extends State<RequestPasswordReset> {
 
   @override
   void dispose() {
-
     _emailController.dispose();
     super.dispose();
   }
@@ -74,8 +72,6 @@ class _RequestPasswordResetState extends State<RequestPasswordReset> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
-
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -87,7 +83,10 @@ class _RequestPasswordResetState extends State<RequestPasswordReset> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: Colors.black,
+                      width: 1.5,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -100,7 +99,6 @@ class _RequestPasswordResetState extends State<RequestPasswordReset> {
               ),
 
               const SizedBox(height: 32),
-
 
               SizedBox(
                 width: double.infinity,

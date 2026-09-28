@@ -81,9 +81,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         currentCategory: event.category,
       ));
       
-      debugPrint('ProductBloc: Emitted ${allProducts.length} products.');
     } catch (e) {
-      debugPrint('ProductBloc: Error fetching products: $e');
       if (state is! ProductLoaded) {
         emit(ProductError(e.toString()));
       }
@@ -94,10 +92,8 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     AddProduct event,
     Emitter<ProductState> emit,
   ) async {
-    debugPrint('ProductBloc: _onAddProduct started for ${event.name}');
     emit(ProductLoading());
     try {
-      debugPrint('ProductBloc: Fetching user profile to check free trial status...');
       final user = await _userRepository.getUserProfile(event.sellerId);
       final bool hasFreeTrial = user.hasFreeTrial;
 
@@ -123,7 +119,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         try {
           await _userRepository.updateFreeTrialStatus(event.sellerId, false);
         } catch (updateError) {
-          debugPrint('ProductBloc: updateFreeTrialStatus failed: $updateError');
+          //debugPrint('ProductBloc: updateFreeTrialStatus failed: $updateError');
         }
         
         emit(ProductAddedSuccess());
@@ -131,7 +127,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         emit(PaymentRequired(productId: productId));
       }
     } catch (e) {
-      debugPrint('ProductBloc: Error during AddProduct: $e');
+      //debugPrint('ProductBloc: Error during AddProduct: $e');
       emit(ProductError(e.toString()));
     }
   }
@@ -140,12 +136,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     ActivateProductEvent event,
     Emitter<ProductState> emit,
   ) async {
-    debugPrint('ProductBloc: Activating product ${event.productId}');
+    //debugPrint('ProductBloc: Activating product ${event.productId}');
     try {
       await _productRepository.activateProduct(event.productId);
       emit(ProductAddedSuccess());
     } catch (e) {
-      debugPrint('ProductBloc: Activation error: $e');
+      //debugPrint('ProductBloc: Activation error: $e');
       emit(ProductError(e.toString()));
     }
   }

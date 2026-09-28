@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import '../../../core/utils/snackbar.dart';
-import '../../../domain/repositories/payment_repository.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../bloc/my_products_bloc.dart';
-import '../../user/user_bloc.dart';
-import '../../user/user_state.dart';
+import '../../core/custom/Edit_productCard.dart';
+import '../../core/utils/snackbar.dart';
+import '../../domain/repositories/payment_repository.dart';
+import '../product/bloc/my_products_bloc.dart';
+import '../user/user_bloc.dart';
+import '../user/user_state.dart';
 
 class MyProductsPage extends StatefulWidget {
   const MyProductsPage({super.key});
@@ -126,6 +126,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
               ),
             ),
           ),
+
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
@@ -136,6 +137,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
               minimumSize: const Size(80, 40),
             ),
             onPressed: () {
+
               final newPrice = double.tryParse(controller.text.replaceAll(',', '.'));
               if (newPrice != null && newPrice > 0) {
                 context.read<MyProductsBloc>().add(UpdateProductPrice(productId, newPrice));
@@ -189,7 +191,11 @@ class _MyProductsPageState extends State<MyProductsPage> {
                 color: Colors.black,
               ),
             ),
+
+
             const SizedBox(height: 8),
+
+
             Text(
               'This action cannot be undone.',
               style: TextStyle(
@@ -213,6 +219,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
               ),
             ),
           ),
+
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
@@ -302,7 +309,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
 
                     return Stack(
                       children: [
-                        _ProductCard(
+                        ProductCard(
                           product: product,
                           onEdit: () => _editPrice(product.id, product.price),
                           onDelete: () => _confirmDelete(product.id, product.name),
@@ -388,7 +395,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
   }
 }
 
-// Empty state widget
+
 class _EmptyState extends StatelessWidget {
   final VoidCallback onRefresh;
 
@@ -405,7 +412,7 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.inbox_outlined,
               size: 80,
-              color: Colors.grey[300],
+              color: Colors.grey.shade300,
             ),
             const SizedBox(height: 24),
             Text(
@@ -413,19 +420,23 @@ class _EmptyState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: Colors.grey.shade800,
               ),
             ),
+
             const SizedBox(height: 8),
+
             Text(
               'Items you post for sale will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Colors.grey.shade600,
               ),
             ),
+
             const SizedBox(height: 32),
+
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
@@ -451,214 +462,4 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// Individual product card
-class _ProductCard extends StatelessWidget {
-  final ProductEntity product;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final VoidCallback onPay;
 
-  const _ProductCard({
-    required this.product,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onPay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isPending = product.status == 'pending_payment';
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isPending ? Colors.orange[300]! : Colors.grey[200]!,
-          width: isPending ? 1.5 : 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: product.imageUrls.isNotEmpty
-                        ? Image.network(
-                            product.imageUrls.first,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey[400],
-                                size: 30,
-                              );
-                            },
-                          )
-                        : Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey[400],
-                            size: 30,
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              product.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          _StatusBadge(status: product.status),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'R ${product.price.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        product.category,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            // Actions
-            if (isPending)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange[800],
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: onPay,
-                      icon: const Icon(Icons.payment, size: 18),
-                      label: const Text('PAY LISTING FEE'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: onDelete,
-                    tooltip: 'Delete',
-                  ),
-                ],
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.black87),
-                    label: const Text(
-                      'Edit Price',
-                      style: TextStyle(color: Colors.black87),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                    label: const Text(
-                      'Delete',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Status badge helper
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    String label;
-
-    switch (status) {
-      case 'active':
-        color = Colors.green;
-        label = 'Active';
-        break;
-      case 'pending_payment':
-        color = Colors.orange;
-        label = 'Payment Pending';
-        break;
-      default:
-        color = Colors.grey;
-        label = status;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}

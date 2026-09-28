@@ -26,13 +26,13 @@ import 'domain/repositories/user_repository.dart';
 import 'data/data_source/payment_remote_data_source.dart';
 import 'data/repositories/payment_repository_impl.dart';
 import 'domain/repositories/payment_repository.dart';
-import 'package:http/http.dart' as http;
-import 'package:app_links/app_links.dart';
-import 'features/product/presentation/my_products_page.dart';
+
 import 'core/utils/offline_cache.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+
   debugPrint('--- App Startup Started ---');
 
   await OfflineCache.init();

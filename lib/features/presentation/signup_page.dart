@@ -37,7 +37,6 @@ class _SignupPageState extends State<SignupPage> {
     'University of Pretoria': '@tuks.co.za',
     'University of KwaZulu-Natal': '@stu.ukzn.ac.za',
     'Rhodes University': '@ru.ac.za',
-    //Additional universities
     'Nelson Mandela University': '@mandela.ac.za',
     'University of Limpopo': '@ul.ac.za',
     'University of Fort Hare': '@ufh.ac.za',
@@ -52,8 +51,6 @@ class _SignupPageState extends State<SignupPage> {
     'Central University of Technology (CUT)': '@cut.ac.za',
     'Vaal University of Technology (VUT)': '@vut.ac.za',
   };
-
-
 
   @override
   void dispose() {
@@ -81,7 +78,10 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            AppSnackBar.warning(context, 'If you are not redirected, try again later');
+            AppSnackBar.warning(
+              context,
+              'If you are not redirected, try again later',
+            );
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
@@ -101,23 +101,25 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
-
-
-
                     TextFormField(
                       controller: _emailController,
-                      decoration:  InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'University Email',
                         hintText: 'student@university.ac.za',
                         prefixIcon: const Icon(Icons.mail),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 1.5,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: Colors.black, width: 2),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 2,
+                          ),
                         ),
                       ),
                       validator: (val) {
@@ -125,7 +127,9 @@ class _SignupPageState extends State<SignupPage> {
                           return 'Invalid email';
                         }
 
-                        final isValid = _universityDomains.values.any((domain) => val.endsWith(domain));
+                        final isValid = _universityDomains.values.any(
+                          (domain) => val.endsWith(domain),
+                        );
                         if (!isValid) {
                           return 'Please use your official student email';
                         }
@@ -136,25 +140,33 @@ class _SignupPageState extends State<SignupPage> {
                     const SizedBox(height: 10),
 
                     TextFormField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(labelText: 'password',
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'password',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 1.5,
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: const BorderSide(color: Colors.black, width: 2),
-                          ),),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 2,
+                          ),
+                        ),
+                      ),
 
-                        validator: (value){
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          } else if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a password';
+                        } else if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 24),
@@ -168,21 +180,27 @@ class _SignupPageState extends State<SignupPage> {
                         ),
 
                         onPressed: _onSignup,
-                        child: const Text('Sign Up', style: TextStyle(fontSize: 18,
-                        color: Colors.white,),
-                      ),),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 16),
 
                     Row(
                       children: [
-                        Text('Already have an account? ',
-                            style: TextStyle(color: Colors.black)),
+                        Text(
+                          'Already have an account? ',
+                          style: TextStyle(color: Colors.black),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const LoginPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const LoginPage(),
+                              ),
                             );
                           },
                           child: const Text('Log In'),
@@ -199,84 +217,7 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
-class CustomDropdown<T> extends StatelessWidget {
-  final String labelText;
-  final List<T> items;
-  final T value;
-  final void Function(T?) onChanged;
-  final String Function(T)? displayItem;
-  final Color borderColor;
 
-  const CustomDropdown({
-    super.key,
-    required this.labelText,
-    required this.items,
-    required this.value,
-    required this.onChanged,
-    this.displayItem,
-    this.borderColor = const Color(0xFF000000), // blue900
-  });
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-          // 1. Wrap with a Theme to customize the dropdown menu's SHAPE
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              // Use DropdownMenuTheme to set the border radius via MenuStyle
-              dropdownMenuTheme: DropdownMenuThemeData(
-                menuStyle: MenuStyle(
-                  // This applies the rounded corners to the floating menu box
-                  shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            child: DropdownButtonFormField<T>(
-              isExpanded: true,
-              initialValue: value,
-              // 2. Use dropdownColor to set the background color
-              dropdownColor: Colors.white,
-              // 3. Keep the elevation to make it look "floating"
-              elevation: 8,
-              decoration: InputDecoration(
-                labelText: labelText,
-                filled: true,
-                fillColor: Colors.white,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: borderColor, width: 2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: borderColor),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              items: items.map((item) {
-                return DropdownMenuItem<T>(
-                  value: item,
-                  child: Text(
-                    displayItem != null ? displayItem!(item) : item.toString(),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
+
+

@@ -12,7 +12,7 @@ import 'features/otheruser/otheruser_bloc.dart';
 import 'features/presentation/home_screen.dart';
 import 'features/presentation/create_account_profile_page.dart';
 import 'features/presentation/verify_page.dart';
-import 'features/product/presentation/my_products_page.dart';
+import 'features/presentation/my_products_page.dart';
 import 'features/presentation/reset_password_page.dart';
 import 'features/presentation/login_page.dart';
 import 'features/presentation/signup_page.dart';
@@ -27,15 +27,13 @@ import 'domain/repositories/product_repository.dart';
 import 'domain/repositories/payment_repository.dart';
 import 'features/chat/chat_bloc.dart';
 import 'features/conversation/conversation_bloc.dart';
-import 'features/conversation/conversation_state.dart';
-import 'features/presentation/chat_page.dart';
+
 import 'domain/repositories/chat_repository.dart';
 import 'features/images/bloc/images_bloc.dart';
 import 'domain/repositories/images_repository.dart';
 import 'features/network/bloc/network_bloc.dart';
 import 'features/search/bloc/search_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'features/user/user_state.dart';
 import 'main.dart'; // Add this for navigatorKey
 
 class MarketApp extends StatelessWidget {
@@ -43,58 +41,45 @@ class MarketApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('Building MarketApp...');
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => NetworkBloc()),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating AuthBloc...');
-            return AuthBloc(GetIt.I<AuthRepository>())..add(AuthCheckRequested());
+            return AuthBloc(GetIt.I<AuthRepository>())
+              ..add(AuthCheckRequested());
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating UserBloc...');
             return UserBloc(GetIt.I<UserRepository>());
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating ProductBloc...');
             final productRepo = GetIt.I<ProductRepository>();
             final userRepo = GetIt.I<UserRepository>();
             final paymentRepo = GetIt.I<PaymentRepository>();
-            debugPrint('ProductRepo: $productRepo');
-            debugPrint('UserRepo: $userRepo');
-            debugPrint('PaymentRepo: $paymentRepo');
-            if (userRepo == null) {
-               debugPrint('ERROR: UserRepo is NULL from GetIt');
-            }
             return ProductBloc(productRepo, userRepo, paymentRepo);
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating ConversationsBloc...');
             return ConversationsBloc(GetIt.I<ChatRepository>());
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating ChatBloc...');
             return ChatBloc(GetIt.I<ChatRepository>());
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating OtherUserBloc...');
             return OtherUserBloc(GetIt.I<OtherUserRepository>());
           },
         ),
         BlocProvider(
           create: (context) {
-            debugPrint('Creating ImagesBloc...');
             return ImagesBloc(GetIt.I<ImagesRepository>());
           },
         ),
@@ -105,7 +90,8 @@ class MarketApp extends StatelessWidget {
           create: (context) => MyProductsBloc(GetIt.I<ProductRepository>()),
         ),
         BlocProvider(
-          create: (context) => OtherUserProductsBloc(GetIt.I<ProductRepository>()),
+          create: (context) =>
+              OtherUserProductsBloc(GetIt.I<ProductRepository>()),
         ),
       ],
       child: const RootGate(),
@@ -133,12 +119,12 @@ class _RootGateState extends State<RootGate> {
   Future<void> _initDeepLinks() async {
     _appLinks = AppLinks();
 
-    // 1. Handle link when the app is already running in the background
+    //Handle link when the app is already running in the background.
     _appLinks.uriLinkStream.listen((uri) {
       _handleIncomingLink(uri);
     });
 
-    // 2. Handle link when the app is launched from a terminated state
+    //Handle link when the app is launched from a terminated state..
     final initialUri = await _appLinks.getInitialLink();
     if (initialUri != null) {
       _handleIncomingLink(initialUri);
@@ -146,12 +132,9 @@ class _RootGateState extends State<RootGate> {
   }
 
   void _handleIncomingLink(Uri uri) {
-    debugPrint('RootGate: Received deep link: $uri');
-
     // Handle payment callback
     if (uri.scheme == 'marketapp' && uri.host == 'paymentrecieved-callback') {
       final productId = uri.queryParameters['id'];
-      debugPrint('RootGate: Payment success for product: $productId');
 
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MyProductsPage()),
@@ -161,9 +144,10 @@ class _RootGateState extends State<RootGate> {
     }
 
     // Supabase sends the reset token as a hash fragment (e.g., #access_token=...)
+    //Importantttt
+
     if (uri.fragment.contains('access_token')) {
-      debugPrint("RootGate: Detected Auth token in fragment: ${uri.fragment}");
-      // The auth listener handles navigation when it detects passwordRecovery event
+      //The auth listener handles navigation when it detects passwordRecovery event
     }
   }
 
@@ -172,49 +156,46 @@ class _RootGateState extends State<RootGate> {
       final event = data.event;
       final session = data.session;
 
-      debugPrint('RootGate: Auth state change: $event');
-
-      // Use GetIt since we might not have a reliable context for providers yet or it's cleaner here
+      // Usng GetIt since we might not have a reliable context for providers yet
+      // or it's cleaner here
       final userRepo = GetIt.I<UserRepository>();
 
       if (event == AuthChangeEvent.passwordRecovery) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
         );
-      }
-      else if (event == AuthChangeEvent.signedIn && session != null) {
-        debugPrint("RootGate: User authenticated. Starting global listeners for: ${session.user.id}");
+      } else if (event == AuthChangeEvent.signedIn && session != null) {
+        //Start persistent listeners immediately
 
-        // 1. Start persistent listeners immediately
         context.read<UserBloc>().add(const WatchCurrentUser());
-        context.read<ConversationsBloc>().add(LoadConversations(session.user.id));
-        
-        // 2. Fetch specific profile details
+        context.read<ConversationsBloc>().add(
+          LoadConversations(session.user.id),
+        );
+
+        //Fetch specific profile details
         context.read<UserBloc>().add(LoadUserProfile(session.user.id));
 
-        // 3. Handle Navigation
-        final isCompleted = await userRepo.checkIsProfileCompleted(session.user.id);
-        debugPrint("RootGate: Profile completion status: $isCompleted");
+        //Handle Navigation|| Check if profile is completed
+        final isCompleted = await userRepo.checkIsProfileCompleted(
+          session.user.id,
+        );
 
         if (!isCompleted) {
-          debugPrint("RootGate: Pushing to CreateAccountProfilePage");
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const CreateAccountProfilePage()),
-                (route) => false,
+            (route) => false,
           );
         } else {
-          debugPrint("RootGate: Pushing to HomeScreen");
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()),
-                (route) => false,
+            (route) => false,
           );
         }
-      }
-      else if (event == AuthChangeEvent.signedOut) {
+      } else if (event == AuthChangeEvent.signedOut) {
         context.read<ConversationsBloc>().add(ClearConversations());
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginPage()),
-              (route) => false,
+          (route) => false,
         );
       }
     });
@@ -238,12 +219,7 @@ class AppRouter extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        debugPrint('AppRouter: Building with state $state');
-
         if (state is Authenticated) {
-          // If we are authenticated, we usually show HomeScreen.
-          // However, RootGate might also be pushing a redirect (e.g. Profile Completion).
-          // We return HomeScreen as the base widget.
           return const HomeScreen();
         }
 
@@ -255,7 +231,6 @@ class AppRouter extends StatelessWidget {
           return const VerifyPage();
         }
 
-        // For AuthInitial, AuthLoading, or other transition states
         return const Scaffold(
           body: Center(child: CircularProgressIndicator.adaptive()),
         );

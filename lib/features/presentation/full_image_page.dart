@@ -16,7 +16,7 @@ class FullImagePage extends StatelessWidget {
     final bool isNetwork = imageUrl.startsWith('http');
     
     return Scaffold(
-      backgroundColor: Colors.black, // good for fullscreen viewing
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -26,7 +26,7 @@ class FullImagePage extends StatelessWidget {
         ),
       ),
       body: Center(
-        child: InteractiveViewer( // allows pinch zoom & pan
+        child: InteractiveViewer( //AA llows pinch zoom & pan
           child: isNetwork 
             ? Image.network(
                 imageUrl,

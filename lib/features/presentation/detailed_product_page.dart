@@ -14,10 +14,8 @@ import 'chat_page.dart'; // Import ChatPage
 class ProductDetailsScreen extends StatefulWidget {
   final ProductEntity product;
 
-  const ProductDetailsScreen({
-    Key? key,
-    required this.product,
-  }) : super(key: key);
+  const ProductDetailsScreen({Key? key, required this.product})
+    : super(key: key);
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -27,11 +25,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +66,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           child: Container(
                             width: double.infinity,
                             height: 320,
-                            color: Colors.grey[200],
+                            color: Colors.grey.shade200,
                             child: widget.product.imageUrls.isNotEmpty
                                 ? PageView.builder(
                                     controller: _pageController,
@@ -84,30 +77,45 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     },
                                     itemCount: widget.product.imageUrls.length,
                                     itemBuilder: (context, index) {
-                                      final url = widget.product.imageUrls[index];
-                                      debugPrint('ProductDetails: Loading image $index: $url');
+                                      final url =
+                                          widget.product.imageUrls[index];
+
                                       return CachedNetworkImage(
                                         imageUrl: url,
                                         fit: BoxFit.cover,
-                                        placeholder: (context, url) => const Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
+                                        placeholder: (context, url) =>
+                                            const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
                                         errorWidget: (context, url, error) {
-                                          debugPrint('ProductDetails: Error loading image: $error');
+
                                           return Center(
                                             child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                                const Icon(
+                                                  Icons.broken_image,
+                                                  size: 40,
+                                                  color: Colors.grey,
+                                                ),
                                                 const SizedBox(height: 8),
                                                 Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                      ),
                                                   child: Text(
                                                     'URL: $url',
-                                                    style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                                    style: const TextStyle(
+                                                      fontSize: 8,
+                                                      color: Colors.grey,
+                                                    ),
                                                     textAlign: TextAlign.center,
                                                     maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
@@ -119,11 +127,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   )
                                 : Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.image_outlined, size: 60, color: Colors.grey),
+                                        const Icon(
+                                          Icons.image_outlined,
+                                          size: 60,
+                                          color: Colors.grey,
+                                        ),
                                         const SizedBox(height: 8),
-                                        Text('No images available (${widget.product.imageUrls.length})', style: const TextStyle(color: Colors.grey)),
+                                        Text(
+                                          'No images available (${widget.product.imageUrls.length})',
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -140,13 +158,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 widget.product.imageUrls.length,
                                 (index) => AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
                                   height: 8,
                                   width: _currentPage == index ? 24 : 8,
                                   decoration: BoxDecoration(
                                     color: _currentPage == index
                                         ? Colors.black
-                                        : Colors.white.withOpacity(0.5),
+                                        : Colors.white.withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -180,7 +200,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue[50],
+                                  color: Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -231,8 +251,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: widget.product.status == 'active'
-                                ? Colors.green[50]
-                                : Colors.grey[200],
+                                ? Colors.green.shade50
+                                : Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -248,6 +268,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 20),
 
                     // Description
@@ -278,7 +299,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.05),
+                            color: Colors.grey.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -288,17 +309,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         children: [
                           const CircleAvatar(
                             radius: 24,
-                            backgroundColor: Color(0xFFF0E8F7),
+                            backgroundColor: Colors.white,
                             child: Icon(
                               Icons.person_outline,
                               color: Colors.black87,
                             ),
                           ),
+
                           const SizedBox(width: 12),
+
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+
                                 const Text(
                                   'Seller Information',
                                   style: TextStyle(
@@ -306,6 +330,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     color: Colors.black87,
                                   ),
                                 ),
+
+
                                 Text(
                                   'Posted ${_getTimeAgo(widget.product.createdAt)}',
                                   style: TextStyle(
@@ -348,18 +374,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         : () {
                             final userState = context.read<UserBloc>().state;
                             if (userState is UserLoaded) {
-                              if (userState.user.id == widget.product.sellerId) {
+                              if (userState.user.id ==
+                                  widget.product.sellerId) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("This is your listing.")),
+                                  const SnackBar(
+                                    content: Text("This is your listing."),
+                                  ),
                                 );
                                 return;
                               }
                               context.read<ConversationsBloc>().add(
-                                    OpenOrCreateConversation(
-                                      currentUserId: userState.user.id,
-                                      otherUserId: widget.product.sellerId,
-                                    ),
-                                  );
+                                OpenOrCreateConversation(
+                                  currentUserId: userState.user.id,
+                                  otherUserId: widget.product.sellerId,
+                                ),
+                              );
                             }
                           },
                     icon: isLoading
@@ -368,19 +397,22 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(CupertinoIcons.chat_bubble_fill,
-                    color: Colors.white,),
+                        : const Icon(
+                            CupertinoIcons.chat_bubble_fill,
+                            color: Colors.white,
+                          ),
                     label: Text(
                       isLoading ? 'Opening...' : 'Send Message',
                       style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.grey[300]!),
+                      side: BorderSide(color: Colors.grey.shade300!),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -395,6 +427,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+
+
+  // Helper function to get time ago
   String _getTimeAgo(DateTime dateTime) {
     final difference = DateTime.now().difference(dateTime);
     if (difference.inDays > 7) {
