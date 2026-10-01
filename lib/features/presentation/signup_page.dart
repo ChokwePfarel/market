@@ -78,9 +78,9 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            AppSnackBar.warning(
+            AppSnackBar.error(
               context,
-              'If you are not redirected, try again later',
+              state.message,
             );
           }
         },

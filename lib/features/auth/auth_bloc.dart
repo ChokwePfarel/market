@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -38,24 +39,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (user != null) {
         emit(Authenticated(user));
       } else {
-        emit(AuthError("Login failed. Please try again."));
+        emit(AuthError("Incorrect email or password. Please try again."));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is AuthException) {
+        final message = e.message.toLowerCase();
+        if (message.contains('invalid login credentials') ||
+            message.contains('invalid_credentials') ||
+            e.statusCode == '400') {
+          emit(AuthError("Incorrect email or password. Please check your credentials and try again."));
+        } else {
+          emit(AuthError(e.message));
+        }
+      } else {
+        emit(AuthError("Incorrect email or password. Please check your credentials and try again."));
+      }
     }
   }
 
   Future<void> _onSignUpRequested(
-      SignUpRequested event,
-      Emitter<AuthState> emit,
-      ) async {
+    SignUpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
-      final response =
-      await _authRepository.signUp(event.email, event.password, event.name);
+      final response = await _authRepository.signUp(event.email, event.password, event.name);
       final user = response.user;
       if (user == null) {
-        emit(AuthError("Sign up failed. Please try again."));
+        emit(AuthError("Sign up failed. Please check your details and try again."));
         return;
       }
       if (response.session == null) {
@@ -65,11 +76,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(Authenticated(user));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is AuthException) {
+        emit(AuthError(e.message));
+      } else {
+        emit(AuthError("Sign up failed. Please try again."));
+      }
     }
   }
-
-
 
   Future<void> _onLogoutRequested(
     LogoutRequested event,
@@ -91,9 +104,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       await _authRepository.sendPasswordResetEmail(event.email);
-      emit(Unauthenticated()); // Or a specific state like PasswordResetEmailSent
+      emit(Unauthenticated());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is AuthException) {
+        emit(AuthError(e.message));
+      } else {
+        emit(AuthError("Failed to send password reset email."));
+      }
     }
   }
 
@@ -110,7 +127,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError("Failed to update password."));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is AuthException) {
+        emit(AuthError(e.message));
+      } else {
+        emit(AuthError("Failed to update password."));
+      }
     }
   }
 }
