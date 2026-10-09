@@ -130,7 +130,7 @@ jobs:
           name: android-release-builds
 
       - name: Deploy AAB to Play Store (Internal Track)
-        uses: rjhala/upload-google-play@v1
+        uses: r0adkll/upload-google-play@v1.1.1
         env:
           SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
         if: env.SERVICE_ACCOUNT_JSON != ''
