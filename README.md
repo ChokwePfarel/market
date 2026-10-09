@@ -7,7 +7,7 @@
 [![Android CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20(Android)-green)](.github/workflows/android_ci_cd.yml)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Market** is a full-featured, cross-platform mobile marketplace application built for university students to buy, sell, and trade items locally on campus. Built with **Flutter**, **BLoC Pattern**, **Clean Architecture**, and **Supabase**, this app demonstrates production-ready mobile engineering standards including real-time chat, offline caching, native image optimization, in-app monetization, and deep-link integration.
+**Market** is a full-featured,mobile marketplace application built for university students to buy, sell, and trade items locally on campus. Built with **Flutter**, **BLoC Pattern**, **Clean Architecture**, and **Supabase**, this app demonstrates production-ready mobile engineering standards including real-time chat, offline caching, native image optimization, in-app monetization, and deep-link integration.
 
 ---
 
