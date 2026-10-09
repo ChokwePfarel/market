@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class FullImagePage extends StatelessWidget {
@@ -45,3 +44,4 @@ class FullImagePage extends StatelessWidget {
     );
   }
 }
+

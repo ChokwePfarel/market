@@ -65,3 +65,4 @@ class ProductEntity extends Equatable {
         createdAt,
       ];
 }
+

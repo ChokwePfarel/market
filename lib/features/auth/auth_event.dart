@@ -1,4 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class AuthEvent {}
 
@@ -28,3 +27,4 @@ class UpdatePasswordRequested extends AuthEvent {
   final String newPassword;
   UpdatePasswordRequested(this.newPassword);
 }
+

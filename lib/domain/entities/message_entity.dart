@@ -44,3 +44,4 @@ class MessageEntity extends Equatable {
   @override
   List<Object?> get props => [id, conversationId, senderId, text, isRead, createdAt, status];
 }
+

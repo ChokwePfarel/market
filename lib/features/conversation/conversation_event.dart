@@ -41,3 +41,4 @@ class SetActiveConversation extends ConversationsEvent {
 }
 
 class ClearConversations extends ConversationsEvent {}
+

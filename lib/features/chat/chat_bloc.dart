@@ -23,7 +23,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<MessageReceived>(_onMessageReceived);
     on<ResendQueuedMessages>(_onResendQueued);
     on<UpdateMessageStatus>(_onUpdateStatus);
-    on<deleteMessage>(_onDeleteMessage);
+    on<DeleteMessage>(_onDeleteMessage);
 
     _connSubscription = Connectivity().onConnectivityChanged.listen((results) {
       if (results.isNotEmpty && results.first != ConnectivityResult.none) {
@@ -162,7 +162,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
 
   Future<void> _onDeleteMessage(
-      deleteMessage event,
+      DeleteMessage event,
       Emitter<ChatState> emit,
       ) async {
     final current = state;
@@ -239,3 +239,4 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     return super.close();
   }
 }
+

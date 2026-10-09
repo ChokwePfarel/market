@@ -77,3 +77,4 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Session? get currentSession => client.auth.currentSession;
 }
+

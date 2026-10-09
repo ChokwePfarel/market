@@ -6,10 +6,6 @@ import '../auth/auth_bloc.dart';
 import '../auth/auth_event.dart';
 import '../auth/auth_state.dart';
 
-import '../user/user_bloc.dart';
-import '../user/user_event.dart';
-import '../user/user_state.dart';
-import 'home_screen.dart';
 import 'login_page.dart';
 import 'verify_page.dart';
 
@@ -217,6 +213,7 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
+
 
 
 

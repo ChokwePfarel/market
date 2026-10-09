@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/conversation_entity.dart';
@@ -163,3 +162,4 @@ class ConversationTileState extends State<ConversationTile>
     super.dispose();
   }
 }
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import '../../core/custom/Edit_productCard.dart';
+import '../../core/custom/edit_product_card.dart';
 import '../../core/utils/snackbar.dart';
 import '../../domain/repositories/payment_repository.dart';
 import '../product/bloc/my_products_bloc.dart';
@@ -319,7 +319,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Center(child: CircularProgressIndicator(color: Colors.black)),
@@ -461,5 +461,6 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+
 
 

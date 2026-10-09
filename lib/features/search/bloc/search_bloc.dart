@@ -63,3 +63,4 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     return super.close();
   }
 }
+

@@ -26,8 +26,8 @@ class ConnectivityBloc extends Bloc<ConnectivityEvent, ConnectivityState> {
       : _connectivity = connectivity ?? Connectivity(),
         super(const ConnectivityState(isOffline: false)) {
     // Start listening immediately
-    _subscription = _connectivity.onConnectivityChanged.listen((result) {
-      final offline = result == ConnectivityResult.none;
+    _subscription = _connectivity.onConnectivityChanged.listen((results) {
+      final offline = results.contains(ConnectivityResult.none) || results.isEmpty;
       add(ConnectivityChanged(offline));
     });
 
@@ -42,3 +42,4 @@ class ConnectivityBloc extends Bloc<ConnectivityEvent, ConnectivityState> {
     return super.close();
   }
 }
+

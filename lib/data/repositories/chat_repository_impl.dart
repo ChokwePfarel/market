@@ -72,3 +72,4 @@ class ChatRepositoryImpl implements ChatRepository {
     remoteDataSource.dispose();
   }
 }
+

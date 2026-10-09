@@ -258,3 +258,4 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     return super.close();
   }
 }
+

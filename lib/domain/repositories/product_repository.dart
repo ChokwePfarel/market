@@ -21,3 +21,4 @@ abstract class ProductRepository {
     required String university,
   });
 }
+

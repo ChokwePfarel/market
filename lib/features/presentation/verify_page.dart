@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class VerifyPage extends StatelessWidget {
@@ -37,3 +36,4 @@ class VerifyPage extends StatelessWidget {
     );
   }
 }
+

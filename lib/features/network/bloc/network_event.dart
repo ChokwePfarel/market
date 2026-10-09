@@ -6,3 +6,4 @@ class NetworkChanged extends NetworkEvent {
   final List<ConnectivityResult> results;
   NetworkChanged(this.results);
 }
+

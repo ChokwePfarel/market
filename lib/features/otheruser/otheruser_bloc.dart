@@ -24,3 +24,4 @@ class OtherUserBloc extends Bloc<OtherUserEvent, OtherUserState> {
     }
   }
 }
+

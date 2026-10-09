@@ -74,3 +74,4 @@ class UserUpdated extends UserEvent {
   @override
   List<Object?> get props => [user];
 }
+

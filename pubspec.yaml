@@ -54,6 +54,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   http: ^1.2.1
 
+  supabase: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

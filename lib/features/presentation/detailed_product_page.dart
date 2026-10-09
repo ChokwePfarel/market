@@ -14,8 +14,7 @@ import 'chat_page.dart'; // Import ChatPage
 class ProductDetailsScreen extends StatefulWidget {
   final ProductEntity product;
 
-  const ProductDetailsScreen({Key? key, required this.product})
-    : super(key: key);
+  const ProductDetailsScreen({super.key, required this.product});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -359,7 +358,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -412,7 +411,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.grey.shade300!),
+                      side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -451,3 +450,4 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     }
   }
 }
+

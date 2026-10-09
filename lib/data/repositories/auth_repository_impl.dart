@@ -35,3 +35,4 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   User? get currentUser => remoteDataSource.currentSession?.user;
 }
+

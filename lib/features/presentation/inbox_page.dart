@@ -1,13 +1,9 @@
-import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:market/core/custom/avatar.dart';
 
-import '../../core/custom/Conversation_tile.dart';
+import '../../core/custom/conversation_tile.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
@@ -242,3 +238,4 @@ class _InboxPageState extends State<InboxPage>
     super.dispose();
   }
 }
+

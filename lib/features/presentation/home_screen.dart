@@ -1,25 +1,17 @@
-import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../core/custom/Header.dart';
+import '../../core/custom/header.dart';
 import '../../core/custom/product_card.dart';
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
-import '../conversation/conversation_state.dart';
 import '../product/bloc/product_bloc.dart';
 import '../product/bloc/product_event.dart';
 import '../product/bloc/product_state.dart';
 import 'add_product_screen.dart';
-import 'my_products_page.dart';
 import 'search_page.dart';
 import '../user/user_event.dart';
-import 'detailed_product_page.dart';
-import 'inbox_page.dart';
-import 'profile_page.dart';
 import '../user/user_bloc.dart';
 import '../user/user_state.dart';
 import '../network/bloc/network_bloc.dart';
@@ -122,11 +114,15 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddProductScreen()),
-          ).then((_) {
+          );
+
+
+            if (!mounted) return;
+
             final userState = context.read<UserBloc>().state;
             if (userState is UserLoaded) {
               context.read<ProductBloc>().add(
@@ -137,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               );
             }
-          });
+
         },
         backgroundColor: Colors.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -174,8 +170,9 @@ class _HomeScreenState extends State<HomeScreen>
               child: BlocListener<UserBloc, UserState>(
                 listenWhen: (previous, current) {
                   // Only re-fetch if university has changed or if we just logged in
-                  if (previous is! UserLoaded && current is UserLoaded)
+                  if (previous is! UserLoaded && current is UserLoaded) {
                     return true;
+                  }
                   if (previous is UserLoaded && current is UserLoaded) {
                     return previous.user.university != current.user.university;
                   }
@@ -378,7 +375,7 @@ class _HomeScreenState extends State<HomeScreen>
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategory == category;
@@ -417,3 +414,4 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 }
+

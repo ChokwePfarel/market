@@ -18,3 +18,4 @@ class SearchQueryChanged extends SearchEvent {
 }
 
 class ClearSearch extends SearchEvent {}
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:market/data/data_source/otherUser_remote_data_source.dart';
+import 'package:market/data/data_source/other_user_remote_data_source.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'app.dart';
@@ -9,7 +9,7 @@ import 'data/data_source/product_remote_data_source.dart';
 import 'data/data_source/user_remote_data_source.dart';
 import 'data/repositories/auth_repository_impl.dart';
 
-import 'data/repositories/other_user_repositoryImpl.dart';
+import 'data/repositories/other_user_repository_impl.dart';
 import 'data/repositories/product_repository_impl.dart';
 import 'data/repositories/user_repository_impl.dart';
 
@@ -50,7 +50,7 @@ void main() async {
       debugPrint('Initializing Supabase...');
       await Supabase.initialize(
         url: url,
-        anonKey: anonKey,
+        publishableKey: anonKey,
       );
       isSupabaseInitialized = true;
       debugPrint('Supabase initialized successfully.');
@@ -138,3 +138,4 @@ void _setupDependencyInjection(bool isSupabaseInitialized) {
     () => PaymentRepositoryImpl(remoteDataSource: paymentRemoteDataSource),
   );
 }
+

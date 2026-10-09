@@ -20,3 +20,4 @@ abstract class ChatRepository {
   Future<void> deleteMessage(String messageId);
   void dispose();
 }
+

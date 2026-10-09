@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 abstract class NetworkState {
   final bool isConnected;
@@ -10,5 +9,6 @@ class NetworkInitial extends NetworkState {
 }
 
 class NetworkStatus extends NetworkState {
-  NetworkStatus(bool isConnected) : super(isConnected);
+  NetworkStatus(super.isConnected);
 }
+

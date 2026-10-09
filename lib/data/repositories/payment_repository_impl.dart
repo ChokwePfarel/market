@@ -16,3 +16,4 @@ class PaymentRepositoryImpl implements PaymentRepository {
     return await remoteDataSource.purchaseListingFee();
   }
 }
+

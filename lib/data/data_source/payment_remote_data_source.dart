@@ -61,7 +61,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       debugPrint('RevenueCat: Attempting purchase of package: ${package.identifier}');
 
       // Using the direct purchase method supported by version 10.x
-      final purchaseResult = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchase(PurchaseParams.package(package));
       
       // Check if the specific entitlement is now active
       final bool hasPro = purchaseResult.customerInfo.entitlements.all[_proEntitlementId]?.isActive ?? false;
@@ -87,3 +87,4 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     }
   }
 }
+

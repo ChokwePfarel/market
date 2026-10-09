@@ -12,3 +12,4 @@ class OtherUserError extends OtherUserState {
   final String message;
   OtherUserError(this.message);
 }
+

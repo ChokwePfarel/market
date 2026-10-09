@@ -13,9 +13,9 @@ class OfflineCache {
   static const String _productsBox = 'products';
   static const String _queueBox = 'message_queue';
 
-  /// Hive deserialises nested maps as Map<dynamic, dynamic>.
-  /// This recursively casts any map/list structure to Map<String, dynamic>
-  /// so every fromJson factory receives the type it expects.
+  // Hive deserializes nested maps as Map<dynamic, dynamic>.
+  // This recursively casts any map/list structure to Map<String, dynamic>
+  // so every fromJson factory receives the type it expects.
   static Map<String, dynamic> _deepCast(dynamic raw) {
     if (raw is! Map) return {};
     final map = Map<String, dynamic>.from(raw);
@@ -168,3 +168,4 @@ class OfflineCache {
     await box.put(key, data);
   }
 }
+

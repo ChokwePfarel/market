@@ -648,3 +648,4 @@ class _MessageInput extends StatelessWidget {
     );
   }
 }
+

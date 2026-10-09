@@ -87,3 +87,4 @@ class _SnackBarTheme {
   final IconData icon;
   const _SnackBarTheme({required this.color, required this.icon});
 }
+

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/utils/offline_cache.dart';
 import '../../../domain/repositories/product_repository.dart';
@@ -146,3 +145,4 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
   }
 }
+

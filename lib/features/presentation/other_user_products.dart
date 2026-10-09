@@ -176,3 +176,4 @@ class _ProductListItem extends StatelessWidget {
     );
   }
 }
+

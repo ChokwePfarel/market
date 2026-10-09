@@ -1,5 +1,4 @@
 // Individual product card
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../domain/entities/product_entity.dart';
 
@@ -9,7 +8,7 @@ class ProductCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onPay;
 
-  const ProductCard({
+  const ProductCard({super.key, 
     required this.product,
     required this.onEdit,
     required this.onDelete,
@@ -203,9 +202,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         label,
@@ -218,3 +217,4 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 }
+

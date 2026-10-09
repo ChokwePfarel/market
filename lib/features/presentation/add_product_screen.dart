@@ -505,7 +505,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Widget _buildCategoryDropdown(bool isLoading) {
     return DropdownButtonFormField<String>(
-      value: _selectedCategory,
+      initialValue: _selectedCategory,
       items: _categories.map((c) {
         return DropdownMenuItem(
           value: c,
@@ -716,3 +716,4 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 }
+

@@ -35,3 +35,4 @@ class MessageModel extends MessageEntity {
     };
   }
 }
+

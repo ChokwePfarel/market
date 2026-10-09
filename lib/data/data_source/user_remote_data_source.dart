@@ -43,8 +43,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     try {
       final user = client.auth.currentUser;
       if (user == null) {
-        print('CREATE_USER ERROR: User is null');
-        throw Exception('Not signed in');
+throw Exception('Not signed in');
       }
 
       String finalImageUrl = '';
@@ -67,7 +66,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         finalImageUrl = profileImageUrl;
       }
 
-      final Map<String, dynamic> updates = {
+      /*final Map<String, dynamic> updates = {
         'id': user.id,
         'full_name': name,
         'sex': sex,
@@ -77,14 +76,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         'is_verified': isVerified,
         'profile_image_url': finalImageUrl,
         'is_profile_completed': true,
-      };
-
-      print('Supabase Payload: $updates');
-      final response = await client.from('profiles').upsert(updates).select();
-      print('Supabase Response: $response');
-    } catch (e) {
-      print('CREATE_USER EXCEPTION: $e');
-      rethrow;
+      };*/
+} catch (e) {
+rethrow;
     }
   }
 
@@ -189,10 +183,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       }
 
       return response['is_profile_completed'] as bool;
-      print("Profile status: ${response['is_profile_completed']}");
     } catch (e) {
-      print("Error checking profile: $e");
-      return false; // Default to false to be safe
+return false; // Default to false to be safe
     }
   }
 }
+

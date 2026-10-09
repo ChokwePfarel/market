@@ -45,7 +45,7 @@ class Header extends StatelessWidget {
                 );
               }
 
-              if (profileUrl!.startsWith('http')) {
+              if (profileUrl.startsWith('http')) {
                 return CachedNetworkImage(
                   imageUrl: profileUrl,
                   imageBuilder: (context, imageProvider) => CircleAvatar(
@@ -145,3 +145,4 @@ class Header extends StatelessWidget {
     );
   }
 }
+

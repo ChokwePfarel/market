@@ -90,3 +90,4 @@ class DeleteProduct extends ProductEvent {
   @override
   List<Object?> get props => [productId];
 }
+

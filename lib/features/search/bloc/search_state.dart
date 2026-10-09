@@ -30,3 +30,4 @@ class SearchError extends SearchState {
   @override
   List<Object?> get props => [message];
 }
+

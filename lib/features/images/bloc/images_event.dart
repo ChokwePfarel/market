@@ -42,3 +42,4 @@ class DeleteImage extends ImagesEvent {
   @override
   List<Object?> get props => [imageId, path];
 }
+

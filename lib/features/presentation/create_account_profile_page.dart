@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/custom/CustDropDown.dart';
+import '../../core/custom/custom_drop_down.dart';
 import '../../core/utils/snackbar.dart';
 import '../user/user_bloc.dart';
 import '../user/user_event.dart';
 import '../user/user_state.dart';
 import 'home_screen.dart';
-import 'signup_page.dart'; // To reuse CustomDropdown if available or universities list
+// To reuse CustomDropdown if available or universities list
 
 class CreateAccountProfilePage extends StatefulWidget {
   const CreateAccountProfilePage({super.key});
@@ -232,7 +232,7 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
                 const SizedBox(height: 10),
 
                 DropdownButtonFormField<String>(
-                  value: _selectedSex,
+                  initialValue: _selectedSex,
                   decoration: InputDecoration(labelText: 'Gender',
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -303,3 +303,4 @@ class _CreateAccountProfilePageState extends State<CreateAccountProfilePage> {
     super.dispose();
   }
 }
+

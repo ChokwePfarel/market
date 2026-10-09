@@ -105,3 +105,4 @@ class ProductModel extends ProductEntity {
     };
   }
 }
+

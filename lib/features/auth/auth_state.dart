@@ -23,6 +23,7 @@ class AuthError extends AuthState {
 class EmailVerificationRequired extends AuthState {
   final String email;
    EmailVerificationRequired(this.email);
-  @override
+
   List<Object?> get props => [email];
 }
+

@@ -8,3 +8,4 @@ abstract class AuthRepository {
   Future<UserResponse> updatePassword(String newPassword);
   User? get currentUser;
 }
+

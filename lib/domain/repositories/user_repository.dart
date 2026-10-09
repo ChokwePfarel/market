@@ -16,3 +16,4 @@ abstract class UserRepository {
   Future<bool> checkIsProfileCompleted(String userId);
 
 }
+

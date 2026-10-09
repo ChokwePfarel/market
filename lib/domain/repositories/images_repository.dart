@@ -17,3 +17,4 @@ abstract class ImagesRepository {
 
   Future<void> deleteImage({required String imageId, required String path});
 }
+

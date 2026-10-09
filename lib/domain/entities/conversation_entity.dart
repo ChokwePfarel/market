@@ -23,3 +23,4 @@ class ConversationEntity extends Equatable {
   @override
   List<Object?> get props => [id, userOneId, userTwoId, lastMessage, lastMessageAt, otherUser, unreadCount];
 }
+

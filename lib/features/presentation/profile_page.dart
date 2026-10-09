@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,7 +7,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:market/core/utils/snackbar.dart';
 import 'package:market/features/presentation/settings_page.dart';
 import '../auth/auth_bloc.dart';
-import '../auth/auth_event.dart';
 import '../auth/auth_state.dart';
 import '../user/user_bloc.dart';
 import '../user/user_event.dart';
@@ -482,3 +480,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }}
+

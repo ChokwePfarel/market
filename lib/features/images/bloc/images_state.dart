@@ -35,3 +35,4 @@ class ImagesError extends ImagesState {
   @override
   List<Object?> get props => [message];
 }
+

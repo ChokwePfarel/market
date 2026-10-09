@@ -59,7 +59,9 @@ class UserRepositoryImpl implements UserRepository {
     await remoteDataSource.updateFreeTrialStatus(userId, hasFreeTrial);
   }
 
+  @override
   Future<bool> checkIsProfileCompleted(String userId) async {
     return await remoteDataSource.checkIsProfileCompleted(userId);
   }
 }
+

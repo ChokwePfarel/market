@@ -55,3 +55,4 @@ class UserEntity extends Equatable {
   List<Object?> get props => [id, name,
     userType, hasFreeTrial,sex, university, profileImageUrl, isVerified, isProfileCompleted];
 }
+

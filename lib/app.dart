@@ -15,7 +15,6 @@ import 'features/presentation/verify_page.dart';
 import 'features/presentation/my_products_page.dart';
 import 'features/presentation/reset_password_page.dart';
 import 'features/presentation/login_page.dart';
-import 'features/presentation/signup_page.dart';
 import 'features/user/user_bloc.dart';
 import 'features/user/user_event.dart';
 import 'features/product/bloc/product_bloc.dart';
@@ -134,7 +133,6 @@ class _RootGateState extends State<RootGate> {
   void _handleIncomingLink(Uri uri) {
     // Handle payment callback
     if (uri.scheme == 'marketapp' && uri.host == 'paymentrecieved-callback') {
-      final productId = uri.queryParameters['id'];
 
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MyProductsPage()),
@@ -167,6 +165,8 @@ class _RootGateState extends State<RootGate> {
       } else if (event == AuthChangeEvent.signedIn && session != null) {
         //Start persistent listeners immediately
 
+        if(!mounted) return;
+
         context.read<UserBloc>().add(const WatchCurrentUser());
         context.read<ConversationsBloc>().add(
           LoadConversations(session.user.id),
@@ -192,6 +192,9 @@ class _RootGateState extends State<RootGate> {
           );
         }
       } else if (event == AuthChangeEvent.signedOut) {
+
+        if(!mounted) return;
+
         context.read<ConversationsBloc>().add(ClearConversations());
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -238,3 +241,4 @@ class AppRouter extends StatelessWidget {
     );
   }
 }
+

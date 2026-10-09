@@ -224,7 +224,6 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         try {
           // 1. Get the row ID and the user columns
           final String conversationId = payload.newRecord['id'] ?? payload.oldRecord['id'];
-          if (conversationId == null) return;
 
           // 2. Identify if this user is involved. 
           // Note: On UPDATE, columns might be missing if they didn't change, 
@@ -350,3 +349,4 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     _conversationsChannel?.unsubscribe();
   }
 }
+
