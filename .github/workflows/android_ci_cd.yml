@@ -29,10 +29,14 @@ jobs:
           cache: true
 
       - name: Create .env File
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL || 'https://placeholder.supabase.co' }}" >> .env
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY || 'placeholder' }}" >> .env
-          echo "REVENUECAT_API_KEY=${{ secrets.REVENUECAT_API_KEY || 'placeholder' }}" >> .env
+          echo "SUPABASE_URL=${SUPABASE_URL:-https://placeholder.supabase.co}" >> .env
+          echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-placeholder}" >> .env
+          echo "REVENUECAT_API_KEY=${REVENUECAT_API_KEY:-placeholder}" >> .env
 
       - name: Get Dependencies
         run: flutter pub get
@@ -65,15 +69,19 @@ jobs:
           cache: true
 
       - name: Create .env File
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL || 'https://placeholder.supabase.co' }}" >> .env
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY || 'placeholder' }}" >> .env
-          echo "REVENUECAT_API_KEY=${{ secrets.REVENUECAT_API_KEY || 'placeholder' }}" >> .env
+          echo "SUPABASE_URL=${SUPABASE_URL:-https://placeholder.supabase.co}" >> .env
+          echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-placeholder}" >> .env
+          echo "REVENUECAT_API_KEY=${REVENUECAT_API_KEY:-placeholder}" >> .env
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Setup Android Keystore (If Secrets Configured)
+      - name: Setup Android Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -125,7 +133,9 @@ jobs:
 
       - name: Deploy AAB to Play Store (Internal Track)
         uses: r3d-buck/upload-google-play@v1.0.3
-        if: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON != '' }}
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
+        if: env.SERVICE_ACCOUNT_JSON != ''
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
           packageName: co.za.marketplaceapp
