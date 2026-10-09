@@ -128,15 +128,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: android-release-builds
+          path: android-release-builds
 
       - name: Deploy AAB to Play Store (Internal Track)
         uses: r0adkll/upload-google-play@v1.1.1
         env:
-          SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
+         SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
         if: env.SERVICE_ACCOUNT_JSON != ''
         with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
-          packageName: co.za.marketplaceapp
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: internal
-          status: completed
+         serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
+         packageName: co.za.marketplaceapp
+         releaseFiles: android-release-builds/build/app/outputs/bundle/release/app-release.aab
+         track: internal
+         status: completed
