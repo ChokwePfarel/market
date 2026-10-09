@@ -4,6 +4,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase)](https://supabase.com)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture%20%2B%20BLoC-blue)](#architecture--state-management)
+[![Android CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20(Android)-green)](.github/workflows/android_ci_cd.yml)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Market** is a full-featured, cross-platform mobile marketplace application built for university students to buy, sell, and trade items locally on campus. Built with **Flutter**, **BLoC Pattern**, **Clean Architecture**, and **Supabase**, this app demonstrates production-ready mobile engineering standards including real-time chat, offline caching, native image optimization, in-app monetization, and deep-link integration.
@@ -104,6 +105,29 @@ Ensure you have the following installed on your development machine:
    ```bash
    flutter run
    ```
+
+---
+
+## ⚙️ Android CI/CD Pipeline (GitHub Actions & Google Play)
+
+An automated **Android-only CI/CD pipeline** is configured via GitHub Actions (`.github/workflows/android_ci_cd.yml`):
+
+### Pipeline Stages:
+1. **Analyze & Test:** Automatically runs `flutter analyze` and `flutter test` on every push and pull request.
+2. **Build Android Release:** Configures JDK 17, injects environment variables, decodes release signing keystores, and compiles both release `.apk` and `.aab` (App Bundle) artifacts.
+3. **Google Play Console Upload:** Automated deployment of the `.aab` file to Google Play Console's Internal Testing track upon merging into `main`.
+
+### Configurable GitHub Repository Secrets:
+| Secret Name | Description |
+|---|---|
+| `SUPABASE_URL` | Supabase backend URL |
+| `SUPABASE_ANON_KEY` | Supabase public anon key |
+| `REVENUECAT_API_KEY` | RevenueCat API key |
+| `ANDROID_KEYSTORE_BASE64` | Base64 encoded release `.jks` keystore file |
+| `ANDROID_KEY_ALIAS` | Release keystore key alias |
+| `ANDROID_KEY_PASSWORD` | Release keystore key password |
+| `ANDROID_STORE_PASSWORD` | Release keystore store password |
+| `PLAY_CONSOLE_SERVICE_ACCOUNT_JSON` | Google Play Developer API Service Account JSON |
 
 ---
 
