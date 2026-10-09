@@ -138,6 +138,6 @@ jobs:
         with:
          serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
          packageName: co.za.marketplaceapp
-         releaseFiles: android-release-builds/build/app/outputs/bundle/release/app-release.aab
+         releaseFiles: '**/*.aab'
          track: internal
          status: completed
