@@ -20,10 +20,13 @@ import 'features/user/user_event.dart';
 import 'features/product/bloc/product_bloc.dart';
 import 'features/product/bloc/my_products_bloc.dart';
 import 'features/product/bloc/other_user_products_bloc.dart';
+import 'features/cart/bloc/cart_bloc.dart';
+import 'features/cart/bloc/cart_event.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/user_repository.dart';
 import 'domain/repositories/product_repository.dart';
 import 'domain/repositories/payment_repository.dart';
+import 'domain/repositories/cart_repository.dart';
 import 'features/chat/chat_bloc.dart';
 import 'features/conversation/conversation_bloc.dart';
 
@@ -91,6 +94,9 @@ class MarketApp extends StatelessWidget {
         BlocProvider(
           create: (context) =>
               OtherUserProductsBloc(GetIt.I<ProductRepository>()),
+        ),
+        BlocProvider(
+          create: (_) => CartBloc(GetIt.I<CartRepository>()),
         ),
       ],
       child: const RootGate(),
@@ -168,9 +174,12 @@ class _RootGateState extends State<RootGate> {
         if(!mounted) return;
 
         context.read<UserBloc>().add(const WatchCurrentUser());
+
         context.read<ConversationsBloc>().add(
           LoadConversations(session.user.id),
         );
+
+        context.read<CartBloc>().add(LoadCart(session.user.id));
 
         //Fetch specific profile details
         context.read<UserBloc>().add(LoadUserProfile(session.user.id));

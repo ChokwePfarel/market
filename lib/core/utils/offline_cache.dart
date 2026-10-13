@@ -12,11 +12,7 @@ class OfflineCache {
   static const String _conversationsBox = 'conversations';
   static const String _productsBox = 'products';
   static const String _queueBox = 'message_queue';
-
-  // Hive deserializes nested maps as Map<dynamic, dynamic>.
-  // This recursively casts any map/list structure to Map<String, dynamic>
-  // so every fromJson factory receives the type it expects.
-
+  static const String _cartBox = 'cart';
 
   static Map<String, dynamic> _deepCast(dynamic raw) {
     if (raw is! Map) return {};
@@ -51,6 +47,7 @@ class OfflineCache {
     if (!Hive.isBoxOpen(_conversationsBox)) await Hive.openBox(_conversationsBox);
     if (!Hive.isBoxOpen(_productsBox)) await Hive.openBox(_productsBox);
     if (!Hive.isBoxOpen(_queueBox)) await Hive.openBox(_queueBox);
+    if (!Hive.isBoxOpen(_cartBox)) await Hive.openBox(_cartBox);
   }
 
   static Future<void> clearAll() async {
@@ -59,13 +56,14 @@ class OfflineCache {
       await Hive.box(_conversationsBox).clear();
       await Hive.box(_productsBox).clear();
       await Hive.box(_queueBox).clear();
+      await Hive.box(_cartBox).clear();
       debugPrint('OfflineCache: All boxes cleared.');
     } catch (e) {
       debugPrint('OfflineCache: Clear error: $e');
     }
   }
 
-  //---------------------------------------------------------------Messages
+  // -------------------------------------------------------------Messages
 
   static List<MessageEntity> getCachedMessages(String conversationId) {
     if (!Hive.isBoxOpen(_messagesBox)) return [];
@@ -98,7 +96,6 @@ class OfflineCache {
     final String convId = message.conversationId;
     final List current = box.get(convId, defaultValue: []);
     
-    //----------------------Convert to model if it's not already, for toJson
     final model = message is MessageModel ? message : MessageModel(
       id: message.id,
       conversationId: message.conversationId,
@@ -139,7 +136,7 @@ class OfflineCache {
     await box.put('inbox_$userId', data);
   }
 
-  //----------------------------------------------------------------Products
+  // ---------------------------------------------------------------Products
 
   static List<ProductEntity> getCachedProducts(String key) {
     if (!Hive.isBoxOpen(_productsBox)) return [];
@@ -169,5 +166,20 @@ class OfflineCache {
     }).toList();
     await box.put(key, data);
   }
-}
 
+  // -------------------------------------------------------------------Cart
+
+  static List<Map<String, dynamic>> getCachedCartRaw() {
+    if (!Hive.isBoxOpen(_cartBox)) return [];
+    final box = Hive.box(_cartBox);
+    final List? data = box.get('user_cart');
+    if (data == null) return [];
+    return data.map((e) => _deepCast(e)).toList();
+  }
+
+  static Future<void> cacheCartRaw(List<Map<String, dynamic>> rawCartItems) async {
+    await _openBoxes();
+    final box = Hive.box(_cartBox);
+    await box.put('user_cart', rawCartItems);
+  }
+}

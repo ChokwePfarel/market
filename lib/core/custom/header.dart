@@ -4,11 +4,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:market/features/presentation/my_products_page.dart';
 
+import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/conversation/conversation_bloc.dart';
 import '../../features/conversation/conversation_state.dart';
 import '../../features/presentation/inbox_page.dart';
-import '../../features/presentation/my_products_page.dart';
 import '../../features/presentation/profile_page.dart';
 import '../../features/user/user_bloc.dart';
 import '../../features/user/user_state.dart';
@@ -79,7 +80,7 @@ class Header extends StatelessWidget {
 
         const Spacer(),
 
-        // Notification
+        // Notification / Inbox
         BlocBuilder<ConversationsBloc, ConversationsState>(
           builder: (context, state) {
             int unreadCount = 0;
@@ -111,7 +112,7 @@ class Header extends StatelessWidget {
                 isLabelVisible: unreadCount > 0,
                 label: Text(unreadCount.toString()),
                 child: const Icon(
-                  CupertinoIcons.bell, // outlined bell
+                  CupertinoIcons.bell,
                   size: 25,
                   color: Colors.black87,
                 ),
@@ -122,12 +123,12 @@ class Header extends StatelessWidget {
 
         const SizedBox(width: 6),
 
-        // Cart
+        // Cart Icon
         IconButton(
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const MyProductsPage() ),
+              MaterialPageRoute(builder: (_) => const CartScreen()),
             );
           },
           style: IconButton.styleFrom(
@@ -140,14 +141,16 @@ class Header extends StatelessWidget {
             size: 25,
             color: Colors.black87,
           ),
-        ),const SizedBox(width: 6),
+        ),
 
-        // Cart
+        const SizedBox(width: 6),
+
+        // My Listings / Collections
         IconButton(
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const MyProductsPage() ),
+              MaterialPageRoute(builder: (_) => const MyProductsPage()),
             );
           },
           style: IconButton.styleFrom(
@@ -156,7 +159,7 @@ class Header extends StatelessWidget {
             padding: const EdgeInsets.all(12),
           ),
           icon: const Icon(
-            CupertinoIcons.cart_fill,
+            CupertinoIcons.collections,
             size: 25,
             color: Colors.black87,
           ),
@@ -165,4 +168,3 @@ class Header extends StatelessWidget {
     );
   }
 }
-

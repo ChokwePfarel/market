@@ -3,13 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/snackbar.dart';
 import '../../domain/entities/product_entity.dart';
+import '../cart/bloc/cart_bloc.dart';
+import '../cart/bloc/cart_event.dart';
 import '../conversation/conversation_bloc.dart';
 import '../conversation/conversation_event.dart';
-import '../conversation/conversation_state.dart'; // Import ConversationsState
+import '../conversation/conversation_state.dart';
 import '../user/user_bloc.dart';
 import '../user/user_state.dart';
-import 'chat_page.dart'; // Import ChatPage
+import 'chat_page.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final ProductEntity product;
@@ -24,7 +27,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
 
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<ConversationsBloc, ConversationsState>(
@@ -37,13 +39,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           );
         } else if (state is ConversationsError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not start chat: ${state.message}')),
-          );
+          AppSnackBar.error(context, 'Could not start chat: ${state.message}');
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -53,7 +53,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -64,7 +64,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             width: double.infinity,
-                            height: 320,
+                            height: 350,
                             color: Colors.grey.shade200,
                             child: widget.product.imageUrls.isNotEmpty
                                 ? PageView.builder(
@@ -76,19 +76,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     },
                                     itemCount: widget.product.imageUrls.length,
                                     itemBuilder: (context, index) {
-                                      final url =
-                                          widget.product.imageUrls[index];
+                                      final url = widget.product.imageUrls[index];
 
                                       return CachedNetworkImage(
                                         imageUrl: url,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) =>
                                             const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                              child: CircularProgressIndicator(),
                                             ),
                                         errorWidget: (context, url, error) {
-
                                           return Center(
                                             child: Column(
                                               mainAxisAlignment:
@@ -113,8 +110,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                                     ),
                                                     textAlign: TextAlign.center,
                                                     maxLines: 2,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
@@ -174,6 +170,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ),
                       ],
                     ),
+
                     const SizedBox(height: 24),
 
                     // Product Name & Price Row
@@ -206,7 +203,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   widget.product.category,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.blue[700],
+                                    color: Colors.blue.shade700,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -314,14 +311,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               color: Colors.black87,
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
                                 const Text(
                                   'Seller Information',
                                   style: TextStyle(
@@ -329,8 +323,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     color: Colors.black87,
                                   ),
                                 ),
-
-
                                 Text(
                                   'Posted ${_getTimeAgo(widget.product.createdAt)}',
                                   style: TextStyle(
@@ -350,7 +342,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ),
 
-            // Bottom Buttons
+            // Bottom Buttons (Add to Cart & Send Message)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -364,60 +356,114 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                 ],
               ),
-              child: BlocBuilder<ConversationsBloc, ConversationsState>(
-                builder: (context, state) {
-                  final isLoading = state is ConversationsLoading;
-                  return OutlinedButton.icon(
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            final userState = context.read<UserBloc>().state;
-                            if (userState is UserLoaded) {
-                              if (userState.user.id ==
-                                  widget.product.sellerId) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("This is your listing."),
+              child: Row(
+                children: [
+                  // Add to Cart Button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        final userState = context.read<UserBloc>().state;
+                        if (userState is UserLoaded) {
+                          if (userState.user.id == widget.product.sellerId) {
+                            AppSnackBar.info(context, "This is your listing.");
+                            return;
+                          }
+                          context.read<CartBloc>().add(
+                            AddToCart(
+                              userId: userState.user.id,
+                              product: widget.product,
+                            ),
+                          );
+                          AppSnackBar.success(
+                            context,
+                            'Added "${widget.product.name}" to cart!',
+                          );
+                        } else {
+                          AppSnackBar.error(
+                            context,
+                            'Please log in to save items to your cart.',
+                          );
+                        }
+                      },
+                      icon: const Icon(CupertinoIcons.cart_badge_plus, color: Colors.black87, size: 20),
+                      label: const Text(
+                        'Add to Cart',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade100,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Send Message Button
+                  Expanded(
+                    child: BlocBuilder<ConversationsBloc, ConversationsState>(
+                      builder: (context, state) {
+                        final isLoading = state is ConversationsLoading;
+                        return ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  final userState = context.read<UserBloc>().state;
+                                  if (userState is UserLoaded) {
+                                    if (userState.user.id == widget.product.sellerId) {
+                                      AppSnackBar.info(context, "This is your listing.");
+                                      return;
+                                    }
+                                    context.read<ConversationsBloc>().add(
+                                      OpenOrCreateConversation(
+                                        currentUserId: userState.user.id,
+                                        otherUserId: widget.product.sellerId,
+                                      ),
+                                    );
+                                  }
+                                },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
                                   ),
-                                );
-                                return;
-                              }
-                              context.read<ConversationsBloc>().add(
-                                OpenOrCreateConversation(
-                                  currentUserId: userState.user.id,
-                                  otherUserId: widget.product.sellerId,
+                                )
+                              : const Icon(
+                                  CupertinoIcons.chat_bubble_fill,
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
-                              );
-                            }
-                          },
-                    icon: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            CupertinoIcons.chat_bubble_fill,
-                            color: Colors.white,
+                          label: Text(
+                            isLoading ? 'Opening...' : 'Message',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                    label: Text(
-                      isLoading ? 'Opening...' : 'Send Message',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
           ],
@@ -431,8 +477,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     _pageController.dispose();
     super.dispose();
   }
-
-
 
   // Helper function to get time ago
   String _getTimeAgo(DateTime dateTime) {
@@ -450,4 +494,3 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     }
   }
 }
-
