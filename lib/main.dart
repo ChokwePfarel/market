@@ -40,22 +40,18 @@ void main() async {
   bool isSupabaseInitialized = false;
 
   try {
-    debugPrint('Loading .env file...');
     await dotenv.load(fileName: ".env");
 
     final url = dotenv.env['SUPABASE_URL'];
     final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
     if (url != null && anonKey != null) {
-      debugPrint('Initializing Supabase...');
       await Supabase.initialize(
         url: url,
         publishableKey: anonKey,
       );
       isSupabaseInitialized = true;
-      debugPrint('Supabase initialized successfully.');
     } else {
-      debugPrint('Supabase credentials missing in .env');
     }
   } catch (e) {
     debugPrint('Initialization error: $e');
@@ -66,10 +62,10 @@ void main() async {
 
   // Initialize RevenueCat for payments
   try {
-    debugPrint('Initializing RevenueCat...');
+    //debugPrint('Initializing RevenueCat...');
     await GetIt.I<PaymentRepository>().init();
   } catch (e) {
-    debugPrint('Main: RevenueCat initialization failed: $e');
+    //debugPrint('Main: RevenueCat initialization failed: $e');
   }
 
   debugPrint('Running MarketApp...');
@@ -85,17 +81,14 @@ void _setupDependencyInjection(bool isSupabaseInitialized) {
   final getIt = GetIt.instance;
 
   if (isSupabaseInitialized) {
-    // Data Sources
     final authRemoteDataSource = AuthRemoteDataSourceImpl(
       client: Supabase.instance.client,
     );
     
-    // Register live Repositories
     getIt.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(remoteDataSource: authRemoteDataSource),
     );
     
-    // In a real app, you'd also have a MockChatRepository
     getIt.registerLazySingleton<ChatRepository>(
       () => ChatRepositoryImpl(ChatRemoteDataSourceImpl(Supabase.instance.client)),
     );
@@ -105,7 +98,6 @@ void _setupDependencyInjection(bool isSupabaseInitialized) {
     );
   }
 
-  // Use Mocks for these regardless (as per current main.dart state)
   final userRemoteDataSource = UserRemoteDataSourceImpl(
     client: Supabase.instance.client,
   );

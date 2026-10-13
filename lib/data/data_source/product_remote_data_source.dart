@@ -65,9 +65,12 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   Future<void> createProduct(ProductModel product) async {
     try {
       final json = product.toJson();
+
       debugPrint('ProductRemoteDataSource: Inserting product to Supabase. Payload: $json');
       final response = await client.from('products').insert(json).select();
+
       debugPrint('ProductRemoteDataSource: Insert successful. Response: $response');
+
     } catch (e) {
       debugPrint('ProductRemoteDataSource: Error inserting product: $e');
       throw Exception('Failed to create product: $e');

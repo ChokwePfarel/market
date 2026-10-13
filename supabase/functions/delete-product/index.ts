@@ -17,7 +17,7 @@ serve(async (req) => {
 
     const { productId } = await req.json()
 
-    // 1. Get the product to find the image URLs
+    // 1 Get the product to find the image URLs
     const { data: product, error: fetchError } = await supabaseClient
       .from('products')
       .select('image_urls, seller_id')
@@ -26,8 +26,9 @@ serve(async (req) => {
 
     if (fetchError || !product) throw new Error('Product not found')
 
-    // 2. Extract storage paths from URLs
+    // 2 Extract storage paths from URLs
     // Ensure we are working with an array (Postgres arrays can sometimes return as strings)
+
     let imageUrls = product.image_urls || []
     if (typeof imageUrls === 'string') {
       if (imageUrls.startsWith('{') && imageUrls.endsWith('}')) {
@@ -48,7 +49,7 @@ serve(async (req) => {
       })
       .filter(Boolean)
 
-    // 3. Delete files from Storage bucket
+    // 3 Delete files from Storage bucket
     if (pathsToDelete.length > 0) {
       const { error: storageError } = await supabaseClient
         .storage
@@ -58,13 +59,13 @@ serve(async (req) => {
       if (storageError) console.error('Storage deletion warning:', storageError)
     }
 
-    // 4. Delete image metadata from product_images table
+    // 4 Delete image metadata from product_images table
     await supabaseClient
       .from('product_images')
       .delete()
       .in('url', Array.isArray(imageUrls) ? imageUrls : [])
 
-    // 5. Delete the product row
+    // 5 Delete the product row
     const { error: deleteError } = await supabaseClient
       .from('products')
       .delete()

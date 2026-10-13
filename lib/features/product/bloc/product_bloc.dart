@@ -42,7 +42,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       ));
     }
 
-    // Optimization: avoid redundant fetches for the same category if already reached max
+    // Optimization: avoiding redundant fetches for the same category if already reached max
     if (currentState is ProductLoaded &&
         currentState.hasReachedMax &&
         !event.isRefresh &&

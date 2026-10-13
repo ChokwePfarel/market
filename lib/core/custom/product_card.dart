@@ -21,7 +21,7 @@ class ProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white70,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.white,),
         ),
@@ -70,7 +70,7 @@ class ProductCard extends StatelessWidget {
                   children: [
                     Text(
                       product.name,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 15,
@@ -78,7 +78,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
 
-                    const Spacer(),
+                    const SizedBox(height: 15,),
 
                     Text(
                       'R ${product.price.toStringAsFixed(2)}',
@@ -88,6 +88,7 @@ class ProductCard extends StatelessWidget {
                         color: Colors.black87,
                       ),
                     ),
+
                   ],
                 ),
               ),

@@ -13,11 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Get the authenticated user's JWT from the request
+    // 1 Get the authenticated users JWT from the request
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) throw new Error('No authorization header')
 
-    // 2. Initialize Supabase client with the SERVICE_ROLE_KEY to perform admin actions
+    // 2 Initialize Supabase client with the SERVICE_ROLE_KEY to perform admin actions
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -29,7 +30,8 @@ serve(async (req) => {
       }
     )
 
-    // 3. Verify the token and get the user ID
+    // 3 Verify the token and get the user ID
+
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authError || !user) throw new Error('Invalid token')
 
@@ -37,8 +39,9 @@ serve(async (req) => {
 
     console.log(`Deleting account for user: ${userId}`)
 
-    // 4. Delete the user from auth.users
+    // 4 Delete the user from auth.users
     // Because we set up ON DELETE CASCADE in the DB, profiles, products, etc. will be wiped automatically.
+
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
     if (deleteError) throw deleteError
 

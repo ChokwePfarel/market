@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   String _selectedCategory = 'Electronics'; //Default
 
+  //SHOULD move to shared
   final List<String> _categories = [
     'Electronics',
     'Books',
@@ -47,10 +47,13 @@ class _HomeScreenState extends State<HomeScreen>
     _scrollController.addListener(_onScroll);
 
     // Trigger initial fetch only if data isnt already loaded.
-    //...
+
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final productBloc = context.read<ProductBloc>();
-      final userState = context.read<UserBloc>().state;
+      final userState = context
+          .read<UserBloc>()
+          .state;
 
       if (userState is UserLoaded) {
         if (productBloc.state is ProductInitial) {
@@ -73,7 +76,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onScroll() {
     if (_isBottom) {
-      final userState = context.read<UserBloc>().state;
+      final userState = context
+          .read<UserBloc>()
+          .state;
       if (userState is UserLoaded) {
         context.read<ProductBloc>().add(
           FetchProducts(
@@ -96,7 +101,9 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _selectedCategory = category;
     });
-    final userState = context.read<UserBloc>().state;
+    final userState = context
+        .read<UserBloc>()
+        .state;
     if (userState is UserLoaded) {
       context.read<ProductBloc>().add(
         FetchProducts(
@@ -121,19 +128,20 @@ class _HomeScreenState extends State<HomeScreen>
           );
 
 
-            if (!mounted) return;
+          if (!mounted) return;
 
-            final userState = context.read<UserBloc>().state;
-            if (userState is UserLoaded) {
-              context.read<ProductBloc>().add(
-                FetchProducts(
-                  university: userState.user.university,
-                  category: _selectedCategory,
-                  isRefresh: true,
-                ),
-              );
-            }
-
+          final userState = context
+              .read<UserBloc>()
+              .state;
+          if (userState is UserLoaded) {
+            context.read<ProductBloc>().add(
+              FetchProducts(
+                university: userState.user.university,
+                category: _selectedCategory,
+                isRefresh: true,
+              ),
+            );
+          }
         },
         backgroundColor: Colors.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -142,14 +150,16 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Offline indicator - existing functionality preserved
+
             BlocBuilder<NetworkBloc, NetworkState>(
               builder: (context, state) {
                 if (!state.isConnected) {
                   return Container(
                     width: double.infinity,
-                    color: Colors.orange,
+                    color: Colors.red,
+
                     padding: const EdgeInsets.symmetric(vertical: 4),
+
                     child: const Text(
                       'Offline',
                       textAlign: TextAlign.center,
@@ -202,7 +212,9 @@ class _HomeScreenState extends State<HomeScreen>
 
                 child: RefreshIndicator(
                   onRefresh: () async {
-                    final userState = context.read<UserBloc>().state;
+                    final userState = context
+                        .read<UserBloc>()
+                        .state;
                     if (userState is UserLoaded) {
                       context.read<ProductBloc>().add(
                         FetchProducts(
@@ -216,16 +228,14 @@ class _HomeScreenState extends State<HomeScreen>
                   child: ListView(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(5, 16, 5, 24),
                     children: [
-                      // ------------------------------------------------
-                      // STATIC HEADER / SEARCH / CATEGORIES
-                      // ------------------------------------------------
                       Header(),
                       const SizedBox(height: 24),
                       _buildSearchBar(context),
                       const SizedBox(height: 24),
                       _buildCategoryTabs(),
+
                       const SizedBox(height: 28),
 
                       Text(
@@ -279,14 +289,15 @@ class _HomeScreenState extends State<HomeScreen>
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: state.products.length,
                                   gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        crossAxisSpacing: 12,
-                                        mainAxisSpacing: 16,
-                                        childAspectRatio: 0.68,
-                                      ),
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 0.68,
+                                  ),
                                   itemBuilder: (context, index) {
                                     final product = state.products[index];
+
                                     return ProductCard(product: product);
                                   },
                                 ),

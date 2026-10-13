@@ -108,7 +108,7 @@ Ensure you have the following installed on your development machine:
 
 ---
 
-## ⚙️ Android CI/CD Pipeline (GitHub Actions & Google Play)
+## Android CI/CD Pipeline (GitHub Actions & Google Play)
 
 An automated **Android-only CI/CD pipeline** is configured via GitHub Actions (`.github/workflows/android_ci_cd.yml`):
 

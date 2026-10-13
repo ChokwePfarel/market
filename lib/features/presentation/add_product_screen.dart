@@ -37,6 +37,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     'Sports',
     'Room',
   ];
+
   final List<File> _images = [];
   final List<String> _uploadedUrls = [];
   bool _isSubmitting = false;

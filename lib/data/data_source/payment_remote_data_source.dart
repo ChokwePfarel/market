@@ -34,8 +34,10 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       
       await Purchases.configure(configuration);
       _isConfigured = true;
+
       debugPrint('RevenueCat: Configured successfully');
     } catch (e) {
+
       debugPrint('RevenueCat: Configuration Error: $e');
     }
   }

@@ -16,6 +16,8 @@ class OfflineCache {
   // Hive deserializes nested maps as Map<dynamic, dynamic>.
   // This recursively casts any map/list structure to Map<String, dynamic>
   // so every fromJson factory receives the type it expects.
+
+
   static Map<String, dynamic> _deepCast(dynamic raw) {
     if (raw is! Map) return {};
     final map = Map<String, dynamic>.from(raw);
@@ -63,7 +65,7 @@ class OfflineCache {
     }
   }
 
-  // ─── Messages ─────────────────────────────────────────────────────────────
+  //---------------------------------------------------------------Messages
 
   static List<MessageEntity> getCachedMessages(String conversationId) {
     if (!Hive.isBoxOpen(_messagesBox)) return [];
@@ -80,7 +82,7 @@ class OfflineCache {
     await box.put(conversationId, data);
   }
 
-  // ─── Message Queue ────────────────────────────────────────────────────────
+  // ---------------------------------------------------------Message Queue
 
   static List<MessageEntity> getQueuedMessages(String conversationId) {
     if (!Hive.isBoxOpen(_queueBox)) return [];
@@ -96,7 +98,7 @@ class OfflineCache {
     final String convId = message.conversationId;
     final List current = box.get(convId, defaultValue: []);
     
-    // Convert to model if it's not already, for toJson
+    //----------------------Convert to model if it's not already, for toJson
     final model = message is MessageModel ? message : MessageModel(
       id: message.id,
       conversationId: message.conversationId,
@@ -118,7 +120,7 @@ class OfflineCache {
     await box.put(conversationId, current);
   }
 
-  // ─── Conversations ────────────────────────────────────────────────────────
+  // -----------------------------------------------------------Conversations
 
   static List<ConversationEntity> getCachedConversations(String userId) {
     if (!Hive.isBoxOpen(_conversationsBox)) return [];
@@ -137,7 +139,7 @@ class OfflineCache {
     await box.put('inbox_$userId', data);
   }
 
-  // ─── Products ─────────────────────────────────────────────────────────────
+  //----------------------------------------------------------------Products
 
   static List<ProductEntity> getCachedProducts(String key) {
     if (!Hive.isBoxOpen(_productsBox)) return [];

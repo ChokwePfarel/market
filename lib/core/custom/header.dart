@@ -40,7 +40,7 @@ class Header extends StatelessWidget {
               if (!hasImage) {
                 return const CircleAvatar(
                   radius: 23,
-                  backgroundColor: Color(0xFFF0E8F7),
+                  backgroundColor: Colors.white70,
                   child: Icon(Icons.person, color: Colors.black87, size: 25),
                 );
               }
@@ -50,17 +50,17 @@ class Header extends StatelessWidget {
                   imageUrl: profileUrl,
                   imageBuilder: (context, imageProvider) => CircleAvatar(
                     radius: 23,
-                    backgroundColor: const Color(0xFFF0E8F7),
+                    backgroundColor: Colors.white70,
                     backgroundImage: imageProvider,
                   ),
                   placeholder: (context, url) => const CircleAvatar(
                     radius: 23,
-                    backgroundColor: Color(0xFFF0E8F7),
+                    backgroundColor: Colors.white70,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                   errorWidget: (context, url, error) => const CircleAvatar(
                     radius: 23,
-                    backgroundColor: Color(0xFFF0E8F7),
+                    backgroundColor: Colors.white70,
                     child: Icon(Icons.person, color: Colors.black87, size: 25),
                   ),
                 );
@@ -69,7 +69,7 @@ class Header extends StatelessWidget {
                 final file = File(profileUrl.replaceFirst('file://', '').replaceFirst('file:/', ''));
                 return CircleAvatar(
                   radius: 23,
-                  backgroundColor: const Color(0xFFF0E8F7),
+                  backgroundColor: Colors.white70,
                   backgroundImage: FileImage(file),
                 );
               }
@@ -137,6 +137,26 @@ class Header extends StatelessWidget {
           ),
           icon: const Icon(
             CupertinoIcons.bag,
+            size: 25,
+            color: Colors.black87,
+          ),
+        ),const SizedBox(width: 6),
+
+        // Cart
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyProductsPage() ),
+            );
+          },
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white,
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(12),
+          ),
+          icon: const Icon(
+            CupertinoIcons.cart_fill,
             size: 25,
             color: Colors.black87,
           ),
