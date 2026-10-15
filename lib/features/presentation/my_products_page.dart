@@ -139,6 +139,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
             onPressed: () {
 
               final newPrice = double.tryParse(controller.text.replaceAll(',', '.'));
+
               if (newPrice != null && newPrice > 0) {
                 context.read<MyProductsBloc>().add(UpdateProductPrice(productId, newPrice));
                 Navigator.pop(context);

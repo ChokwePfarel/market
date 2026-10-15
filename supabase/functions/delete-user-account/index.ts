@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 serve(async (req) => {
-  // CORS Headers
+
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -13,11 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    // 1 Get the authenticated users JWT from the request
+    // Get the authenticated users JWT from the request
+
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) throw new Error('No authorization header')
 
-    // 2 Initialize Supabase client with the SERVICE_ROLE_KEY to perform admin actions
+    //  Initialize Supabase client with the SERVICE_ROLE_KEY to perform admin actions
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
