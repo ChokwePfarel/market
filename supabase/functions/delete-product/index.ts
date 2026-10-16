@@ -15,7 +15,8 @@ serve(async (req) => {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
 
-    // 1 Verify User Authentication via Bearer token
+    // Verifying User Authentication via Bearer token
+
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
