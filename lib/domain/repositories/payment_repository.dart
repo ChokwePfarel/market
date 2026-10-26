@@ -1,5 +1,5 @@
 abstract class PaymentRepository {
   Future<void> init();
-  Future<bool> purchaseListingFee();
+  Future<void> logIn(String userId);
+  Future<bool> purchaseListingFee({String? productId});
 }
-

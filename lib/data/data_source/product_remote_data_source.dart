@@ -67,10 +67,18 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       final json = product.toJson();
 
       debugPrint('ProductRemoteDataSource: Inserting product to Supabase. Payload: $json');
-      final response = await client.from('products').insert(json).select();
+      await client.from('products').insert(json);
 
-      debugPrint('ProductRemoteDataSource: Insert successful. Response: $response');
+      if (product.status == 'active') {
+        try {
+          await client.functions.invoke('update-free-trial');
+          debugPrint('ProductRemoteDataSource: update-free-trial Edge Function invoked successfully.');
+        } catch (edgeError) {
+          debugPrint('ProductRemoteDataSource: Warning invoking update-free-trial function: $edgeError');
+        }
+      }
 
+      debugPrint('ProductRemoteDataSource: Insert successful.');
     } catch (e) {
       debugPrint('ProductRemoteDataSource: Error inserting product: $e');
       throw Exception('Failed to create product: $e');

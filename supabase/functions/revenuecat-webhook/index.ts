@@ -1,112 +1,226 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+const VALID_PURCHASE_EVENTS = [
+  "INITIAL_PURCHASE",
+  "NON_RENEWING_PURCHASE",
+  "RENEWAL",
+  "PRODUCT_CHANGE",
+];
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function jsonResponse(
+  body: unknown,
+  status = 200,
+) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const webhookSecret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET') ?? ''
+    // ==========================================
+    // Environment Variables
+    // ==========================================
 
-    // 1. Verify Authorization Header if webhook secret is configured
-    if (webhookSecret) {
-      const authHeader = req.headers.get('Authorization')
-      if (!authHeader || authHeader !== `Bearer ${webhookSecret}`) {
-        return new Response(JSON.stringify({ error: 'Unauthorized webhook request' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        })
-      }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const webhookSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl) {
+      throw new Error("SUPABASE_URL missing");
     }
 
-    const body = await req.json()
-    console.log('RevenueCat Webhook Payload:', JSON.stringify(body))
+    if (!webhookSecret) {
+      throw new Error("REVENUECAT_WEBHOOK_SECRET missing");
+    }
 
-    const event = body.event
+    if (!serviceRoleKey) {
+      throw new Error("SUPABASE_SERVICE_ROLE_KEY missing");
+    }
+
+    // ==========================================
+    // Verify Webhook
+    // ==========================================
+
+    const authHeader = req.headers.get("Authorization");
+
+    if (!authHeader || authHeader !== `Bearer ${webhookSecret}`) {
+      return jsonResponse(
+        {
+          error: "Unauthorized webhook request",
+        },
+        401,
+      );
+    }
+
+    // ==========================================
+    // Parse Payload
+    // ==========================================
+
+    const body = await req.json();
+
+    console.log(
+      "RevenueCat Webhook Payload:",
+      JSON.stringify(body),
+    );
+
+    const event = body.event;
+
     if (!event) {
-      return new Response(JSON.stringify({ error: 'Missing event payload' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      })
+      return jsonResponse(
+        {
+          error: "Missing event payload",
+        },
+        400,
+      );
     }
 
-    const eventType = event.type
-    const appUserId = event.app_user_id
+    const eventType = event.type;
+    const appUserId = event.app_user_id;
 
-    // Check if event is a purchase event
-    const validEvents = ['INITIAL_PURCHASE', 'NON_RENEWING_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE']
-    if (!validEvents.includes(eventType)) {
-      console.log(`Ignoring event type: ${eventType}`)
-      return new Response(JSON.stringify({ message: `Ignored event: ${eventType}` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      })
+    if (!VALID_PURCHASE_EVENTS.includes(eventType)) {
+      console.log(`Ignoring event type: ${eventType}`);
+      return jsonResponse({
+        message: `Ignored event: ${eventType}`,
+      });
     }
 
-    // Extract product ID from URL query param or custom subscriber attributes
-    const url = new URL(req.url)
-    let productId = url.searchParams.get('productId')
+    // ==========================================
+    // Product ID Lookup
+    // ==========================================
 
-    if (!productId && event.subscriber_attributes?.productId?.value) {
-      productId = event.subscriber_attributes.productId.value
-    }
+    const url = new URL(req.url);
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const productId =
+      url.searchParams.get("productId") ??
+      event.subscriber_attributes?.productId?.value ??
+      null;
 
-    // 2. Activate product by specific productId, or activate latest pending product for this user
+    // ==========================================
+    // Admin Client
+    // ==========================================
+
+    const supabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+    );
+
+    // ==========================================
+    // Activate Explicit Product
+    // ==========================================
+
     if (productId) {
-      console.log(`Activating product by ID: ${productId}`)
+      console.log(`Activating product by ID: ${productId}`);
+
       const { error } = await supabase
-        .from('products')
-        .update({ status: 'active' })
-        .eq('id', productId)
+        .from("products")
+        .update({
+          status: "active",
+        })
+        .eq("id", productId);
 
-      if (error) throw error
-    } else if (appUserId) {
-      console.log(`Activating latest pending product for seller: ${appUserId}`)
-      const { data: pendingProducts, error: fetchError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('seller_id', appUserId)
-        .eq('status', 'pending_payment')
-        .order('created_at', { ascending: false })
-        .limit(1)
+      if (error) throw error;
 
-      if (fetchError) throw fetchError
-
-      if (pendingProducts && pendingProducts.length > 0) {
-        const targetId = pendingProducts[0].id
-        console.log(`Activating pending product: ${targetId}`)
-
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ status: 'active' })
-          .eq('id', targetId)
-
-        if (updateError) throw updateError
-      } else {
-        console.log(`No pending_payment products found for seller ${appUserId}`)
-      }
+      return jsonResponse({
+        success: true,
+        message: "Product activated",
+      });
     }
 
-    return new Response(JSON.stringify({ success: true, message: 'Payment verified and product activated' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    // ==========================================
+    // Activate Latest Pending Product
+    // ==========================================
 
-  } catch (err) {
-    console.error('RevenueCat Webhook Error:', err.message)
-    return new Response(JSON.stringify({ error: err.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+    if (!appUserId) {
+      return jsonResponse({
+        success: true,
+        message: "No productId or app_user_id supplied",
+      });
+    }
+
+    // Validate if appUserId is a valid UUID before querying PostgreSQL UUID column
+    if (!UUID_REGEX.test(appUserId)) {
+      console.warn(
+        `Warning: app_user_id "${appUserId}" is not a valid UUID (likely an anonymous RevenueCat ID). Please ensure Purchases.logIn() is called upon user authentication.`,
+      );
+
+      return jsonResponse({
+        success: false,
+        message: "Skipped activation: app_user_id is not a valid UUID",
+      });
+    }
+
+    console.log(`Finding pending product for user UUID ${appUserId}`);
+
+    const {
+      data: pendingProduct,
+      error: fetchError,
+    } = await supabase
+      .from("products")
+      .select("id")
+      .eq("seller_id", appUserId)
+      .eq("status", "pending_payment")
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(1)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (!pendingProduct) {
+      console.log(`No pending products for ${appUserId}`);
+
+      return jsonResponse({
+        success: true,
+        message: "No pending products found",
+      });
+    }
+
+    console.log(`Activating product ${pendingProduct.id}`);
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({
+        status: "active",
+      })
+      .eq("id", pendingProduct.id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return jsonResponse({
+      success: true,
+      message: "Payment verified and product activated",
+    });
+  } catch (error) {
+    console.error("RevenueCat Webhook Error:", error);
+
+    return jsonResponse(
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
-})
+});

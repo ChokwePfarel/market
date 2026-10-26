@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart'; // Required for PlatformException
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-
 
 abstract class PaymentRemoteDataSource {
   Future<void> init();
-  Future<bool> purchaseListingFee();
+  Future<void> logIn(String userId);
+  Future<bool> purchaseListingFee({String? productId});
 }
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
@@ -34,21 +34,35 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       
       await Purchases.configure(configuration);
       _isConfigured = true;
-
       debugPrint('RevenueCat: Configured successfully');
     } catch (e) {
-
       debugPrint('RevenueCat: Configuration Error: $e');
     }
   }
 
   @override
-  Future<bool> purchaseListingFee() async {
+  Future<void> logIn(String userId) async {
     try {
-      // Ensure initialized before proceeding
+      if (!_isConfigured) await init();
+      await Purchases.logIn(userId);
+      debugPrint('RevenueCat: Successfully logged in user $userId');
+    } catch (e) {
+      debugPrint('RevenueCat: Error logging in user: $e');
+    }
+  }
+
+  @override
+  Future<bool> purchaseListingFee({String? productId}) async {
+    try {
       if (!_isConfigured) {
         debugPrint('RevenueCat: Not configured, initializing now...');
         await init();
+      }
+
+      // Store productId in RevenueCat subscriber attributes so webhook receives it
+      if (productId != null && productId.isNotEmpty) {
+        await Purchases.setAttributes({'productId': productId});
+        debugPrint('RevenueCat: Set subscriber attribute productId = $productId');
       }
 
       debugPrint('RevenueCat: Fetching offerings...');
@@ -62,10 +76,8 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       final package = offerings.current!.availablePackages.first;
       debugPrint('RevenueCat: Attempting purchase of package: ${package.identifier}');
 
-      // Using the direct purchase method supported by version 10.x
       final purchaseResult = await Purchases.purchase(PurchaseParams.package(package));
       
-      // Check if the specific entitlement is now active
       final bool hasPro = purchaseResult.customerInfo.entitlements.all[_proEntitlementId]?.isActive ?? false;
       debugPrint('RevenueCat: Purchase complete. Entitlement $_proEntitlementId active: $hasPro');
       
@@ -89,4 +101,3 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     }
   }
 }
-

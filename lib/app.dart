@@ -16,12 +16,10 @@ import 'features/presentation/my_products_page.dart';
 import 'features/presentation/reset_password_page.dart';
 import 'features/presentation/login_page.dart';
 import 'features/user/user_bloc.dart';
-import 'features/user/user_event.dart';
 import 'features/product/bloc/product_bloc.dart';
 import 'features/product/bloc/my_products_bloc.dart';
 import 'features/product/bloc/other_user_products_bloc.dart';
 import 'features/cart/bloc/cart_bloc.dart';
-import 'features/cart/bloc/cart_event.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/user_repository.dart';
 import 'domain/repositories/product_repository.dart';
@@ -170,21 +168,13 @@ class _RootGateState extends State<RootGate> {
         );
       } else if (event == AuthChangeEvent.signedIn && session != null) {
         //Start persistent listeners immediately
+        try {
+          await GetIt.I<PaymentRepository>().logIn(session.user.id);
+        } catch (e) {
+          debugPrint('Error logging into RevenueCat on sign in: $e');
+        }
 
-        if(!mounted) return;
-
-        context.read<UserBloc>().add(const WatchCurrentUser());
-
-        context.read<ConversationsBloc>().add(
-          LoadConversations(session.user.id),
-        );
-
-        context.read<CartBloc>().add(LoadCart(session.user.id));
-
-        //Fetch specific profile details
-        context.read<UserBloc>().add(LoadUserProfile(session.user.id));
-
-        //Handle Navigation|| Check if profile is completed
+        //Handle Navigation Check if profile is completed
         final isCompleted = await userRepo.checkIsProfileCompleted(
           session.user.id,
         );

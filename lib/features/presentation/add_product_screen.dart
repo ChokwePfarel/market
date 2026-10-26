@@ -15,6 +15,8 @@ import '../user/user_state.dart';
 import '../../domain/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
 
+import 'home_screen.dart';
+
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
 
@@ -156,15 +158,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Future<void> _handlePayment(String productId) async {
     setState(() => _isSubmitting = true);
     try {
-      final success = await GetIt.I<PaymentRepository>().purchaseListingFee();
+      final success = await GetIt.I<PaymentRepository>().purchaseListingFee(productId: productId);
+      setState(() => _isSubmitting = false);
       if (success) {
         if (mounted) {
-          context.read<ProductBloc>().add(ActivateProductEvent(productId));
+          AppSnackBar.success(context, 'Payment successful! Listing activated.');
+          Navigator.pop(context);
         }
       } else {
-        setState(() => _isSubmitting = false);
         if (mounted) {
-          // Changed to show more detail for debugging on the phone
           AppSnackBar.info(context, 'Payment failed.');
         }
       }
@@ -202,11 +204,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
           listener: (context, state) {
             if (state is ProductAddedSuccess) {
               setState(() => _isSubmitting = false);
-              AppSnackBar.success(context, 'Product listed successfully!');
+
+              AppSnackBar.success(
+                context,
+                'Product listed successfully!',
+              );
+
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const MyProductsPage()),
-                (route) => false,
+                MaterialPageRoute(
+                  builder: (_) => const HomeScreen(),
+                ),
+                    (route) => false,
+              );
+
+              if (!mounted) return;
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MyProductsPage(),
+                ),
               );
             } else if (state is PaymentRequired) {
               setState(() => _isSubmitting = false);

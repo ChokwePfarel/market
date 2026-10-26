@@ -12,8 +12,12 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }
 
   @override
-  Future<bool> purchaseListingFee() async {
-    return await remoteDataSource.purchaseListingFee();
+  Future<void> logIn(String userId) async {
+    await remoteDataSource.logIn(userId);
+  }
+
+  @override
+  Future<bool> purchaseListingFee({String? productId}) async {
+    return await remoteDataSource.purchaseListingFee(productId: productId);
   }
 }
-

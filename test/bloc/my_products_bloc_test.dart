@@ -156,15 +156,5 @@ void main() {
       expect(updatedState.products.length, 1);
       expect(updatedState.products.any((p) => p.id == 'p-2'), isFalse);
     });
-
-    test('ActivateMyProduct emits MyProductActivatedSuccess', () async {
-      final expectedStates = [
-        isA<MyProductActivatedSuccess>(),
-      ];
-
-      expectLater(bloc.stream, emitsInOrder(expectedStates));
-
-      bloc.add(const ActivateMyProduct('p-2'));
-    });
   });
 }

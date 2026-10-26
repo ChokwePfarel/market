@@ -191,7 +191,9 @@ class _SearchPageState extends State<SearchPage> {
                         color: Colors.grey[800],
                       ),
                     ),
+
                     const SizedBox(height: 8),
+
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
@@ -378,7 +380,7 @@ class _ProductCard extends StatelessWidget {
         ),
         trailing: Icon(
           Icons.chevron_right,
-          color: Colors.grey[400],
+          color: Colors.grey.shade400,
         ),
         onTap: () {
           Navigator.push(

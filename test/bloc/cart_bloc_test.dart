@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:market/core/utils/offline_cache.dart';
 import 'package:market/domain/entities/product_entity.dart';
 import 'package:market/domain/repositories/cart_repository.dart';
 import 'package:market/features/cart/bloc/cart_bloc.dart';
@@ -23,11 +26,13 @@ class FakeCartRepository implements CartRepository {
   @override
   Future<void> removeFromCart(String userId, String productId) async {
     if (shouldThrow) throw Exception('Database error removing from cart');
+    cartProductsToReturn.removeWhere((p) => p.id == productId);
   }
 
   @override
   Future<void> clearCart(String userId) async {
     if (shouldThrow) throw Exception('Database error clearing cart');
+    cartProductsToReturn.clear();
   }
 }
 
@@ -48,9 +53,17 @@ void main() {
     createdAt: DateTime.now(),
   );
 
-  setUp(() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final tempDir = await Directory.systemTemp.createTemp('hive_test');
+    Hive.init(tempDir.path);
+    await OfflineCache.init();
+  });
+
+  setUp(() async {
     fakeCartRepository = FakeCartRepository();
     cartBloc = CartBloc(fakeCartRepository);
+    await OfflineCache.clearAll();
   });
 
   tearDown(() {
@@ -62,10 +75,11 @@ void main() {
       expect(cartBloc.state, isA<CartInitial>());
     });
 
-    test('LoadCart event emits CartLoaded with products', () async {
+    test('LoadCart event emits [CartLoading, CartLoaded] with products', () async {
       fakeCartRepository.cartProductsToReturn = [sampleProduct];
 
       final expected = [
+        isA<CartLoading>(),
         isA<CartLoaded>().having((s) => s.products.length, 'products length', 1),
       ];
 
@@ -75,12 +89,13 @@ void main() {
     });
 
     test('AddToCart adds product to cart state', () async {
-      cartBloc.add(LoadCart('user-1'));
+      fakeCartRepository.cartProductsToReturn = [];
+      cartBloc.add(const LoadCart('user-1'));
       await cartBloc.stream.firstWhere((s) => s is CartLoaded);
 
       cartBloc.add(AddToCart(userId: 'user-1', product: sampleProduct));
 
-      final state = await cartBloc.stream.firstWhere((s) => s is CartLoaded) as CartLoaded;
+      final state = await cartBloc.stream.firstWhere((s) => s is CartLoaded && s.message != null) as CartLoaded;
       expect(state.products.length, 1);
       expect(state.products.first.id, 'prod-101');
       expect(state.message, contains('Added "Calculus Textbook" to cart'));

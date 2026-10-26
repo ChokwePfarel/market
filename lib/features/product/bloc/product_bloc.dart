@@ -16,7 +16,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ProductBloc(this._productRepository, this._userRepository, [PaymentRepository? paymentRepository]) : super(ProductInitial()) {
     on<FetchProducts>(_onFetchProducts);
     on<AddProduct>(_onAddProduct);
-    on<ActivateProductEvent>(_onActivateProduct);
   }
 
   Future<void> _onFetchProducts(
@@ -25,7 +24,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     final currentState = state;
 
-    // Only emit loading if we don't have existing products to show
     if (event.isRefresh && currentState is! ProductLoaded) {
       emit(ProductLoading());
     }
@@ -33,7 +31,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     final cacheKey = '${event.university}_${event.category}';
     final cached = OfflineCache.getCachedProducts(cacheKey);
 
-    // If initial load and we have cache, show it immediately
     if (currentState is! ProductLoaded && cached.isNotEmpty) {
       emit(ProductLoaded(
         products: cached,
@@ -42,7 +39,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       ));
     }
 
-    // Optimization: avoiding redundant fetches for the same category if already reached max
     if (currentState is ProductLoaded &&
         currentState.hasReachedMax &&
         !event.isRefresh &&
@@ -115,34 +111,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       await _productRepository.createProduct(product);
 
       if (status == 'active') {
-        try {
-          await _userRepository.updateFreeTrialStatus(event.sellerId, false);
-        } catch (updateError) {
-          //debugPrint('ProductBloc: updateFreeTrialStatus failed: $updateError');
-        }
-        
         emit(ProductAddedSuccess());
       } else {
         emit(PaymentRequired(productId: productId));
       }
     } catch (e) {
-      //debugPrint('ProductBloc: Error during AddProduct: $e');
-      emit(ProductError(e.toString()));
-    }
-  }
-
-  Future<void> _onActivateProduct(
-    ActivateProductEvent event,
-    Emitter<ProductState> emit,
-  ) async {
-    //debugPrint('ProductBloc: Activating product ${event.productId}');
-    try {
-      await _productRepository.activateProduct(event.productId);
-      emit(ProductAddedSuccess());
-    } catch (e) {
-      //debugPrint('ProductBloc: Activation error: $e');
       emit(ProductError(e.toString()));
     }
   }
 }
-

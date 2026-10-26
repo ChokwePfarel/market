@@ -34,14 +34,14 @@ class _MyProductsPageState extends State<MyProductsPage> {
   Future<void> _handleRetryPayment(String productId) async {
     setState(() => _processingProductId = productId);
     try {
-      final success = await GetIt.I<PaymentRepository>().purchaseListingFee();
+      final success = await GetIt.I<PaymentRepository>().purchaseListingFee(productId: productId);
+      setState(() => _processingProductId = null);
       if (success) {
         if (mounted) {
-          context.read<MyProductsBloc>().add(ActivateMyProduct(productId));
           AppSnackBar.success(context, 'Payment successful!');
+          _loadProducts();
         }
       } else {
-        setState(() => _processingProductId = null);
         if (mounted) {
           AppSnackBar.info(context, 'Payment failed or was cancelled.');
         }
@@ -254,6 +254,13 @@ class _MyProductsPageState extends State<MyProductsPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios),
+          color: Colors.black,
+        ),
         elevation: 0,
         title: const Text(
           'My Listings',
@@ -272,14 +279,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
           ),
         ],
       ),
-      body: BlocListener<MyProductsBloc, MyProductsState>(
-        listener: (context, state) {
-          if (state is MyProductActivatedSuccess && _processingProductId != null) {
-            setState(() => _processingProductId = null);
-            _loadProducts();
-          }
-        },
-        child: BlocBuilder<MyProductsBloc, MyProductsState>(
+      body: BlocBuilder<MyProductsBloc, MyProductsState>(
           builder: (context, state) {
             if (state is MyProductsLoading && _processingProductId == null) {
               return const Center(
@@ -310,12 +310,14 @@ class _MyProductsPageState extends State<MyProductsPage> {
 
                     return Stack(
                       children: [
+
                         ProductCard(
                           product: product,
                           onEdit: () => _editPrice(product.id, product.price),
                           onDelete: () => _confirmDelete(product.id, product.name),
                           onPay: () => _handleRetryPayment(product.id),
                         ),
+
                         if (isProcessingThis)
                           Positioned.fill(
                             child: Container(
@@ -343,7 +345,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: Colors.grey.shade400,
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -351,7 +353,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
+                          color: Colors.grey.shade800,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -363,7 +365,9 @@ class _MyProductsPageState extends State<MyProductsPage> {
                           fontSize: 14,
                         ),
                       ),
+
                       const SizedBox(height: 24),
+
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
@@ -391,7 +395,6 @@ class _MyProductsPageState extends State<MyProductsPage> {
             return const SizedBox.shrink();
           },
         ),
-      ),
     );
   }
 }

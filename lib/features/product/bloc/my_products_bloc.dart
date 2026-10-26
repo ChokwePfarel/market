@@ -36,14 +36,6 @@ class DeleteProduct extends MyProductsEvent {
   List<Object?> get props => [productId];
 }
 
-class ActivateMyProduct extends MyProductsEvent {
-  final String productId;
-  const ActivateMyProduct(this.productId);
-
-  @override
-  List<Object?> get props => [productId];
-}
-
 // --- STATES ---
 abstract class MyProductsState extends Equatable {
   const MyProductsState();
@@ -72,8 +64,6 @@ class MyProductsError extends MyProductsState {
   List<Object?> get props => [message];
 }
 
-class MyProductActivatedSuccess extends MyProductsState {}
-
 // --- BLOC ---
 class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
   final ProductRepository _productRepository;
@@ -82,7 +72,6 @@ class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
     on<FetchUserProducts>(_onFetchUserProducts);
     on<UpdateProductPrice>(_onUpdateProductPrice);
     on<DeleteProduct>(_onDeleteProduct);
-    on<ActivateMyProduct>(_onActivateMyProduct);
   }
 
   Future<void> _onFetchUserProducts(
@@ -133,17 +122,4 @@ class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
       }
     }
   }
-
-  Future<void> _onActivateMyProduct(
-    ActivateMyProduct event,
-    Emitter<MyProductsState> emit,
-  ) async {
-    try {
-      await _productRepository.activateProduct(event.productId);
-      emit(MyProductActivatedSuccess());
-    } catch (e) {
-      emit(MyProductsError(e.toString()));
-    }
-  }
 }
-
