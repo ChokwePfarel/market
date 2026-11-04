@@ -153,5 +153,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
           packageName: co.za.marketplaceapp
           releaseFiles: '**/*.aab'
-          track: alpha #Use 'alpha' for default Closed Testing, or 'beta'
+          track: fist track #Use 'alpha' for default Closed Testing, or 'beta'
           status: completed
