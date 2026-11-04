@@ -10,7 +10,6 @@ import '../user/user_bloc.dart';
 import '../user/user_event.dart';
 import '../user/user_state.dart';
 import 'home_screen.dart';
-// To reuse CustomDropdown if available or universities list
 
 class CreateAccountProfilePage extends StatefulWidget {
   const CreateAccountProfilePage({super.key});

@@ -79,7 +79,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (e is AuthException) {
         emit(AuthError(e.message));
       } else {
-        emit(AuthError("Sign up failed. Please try again."));
+        emit(AuthError(e.toString()));
       }
     }
   }

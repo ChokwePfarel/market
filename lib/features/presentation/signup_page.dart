@@ -124,7 +124,7 @@ class _SignupPageState extends State<SignupPage> {
                         }
 
                         final isValid = _universityDomains.values.any(
-                          (domain) => val.endsWith(domain),
+                              (domain) => val.endsWith(domain),
                         );
                         if (!isValid) {
                           return 'Please use your official student email';
@@ -232,8 +232,3 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
-
-
-
-
-

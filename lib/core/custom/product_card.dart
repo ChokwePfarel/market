@@ -21,9 +21,9 @@ class ProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white70,
+          color: Colors.white60,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white,),
+         // border: Border.all(color: Colors.white,),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(

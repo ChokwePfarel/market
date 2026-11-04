@@ -11,6 +11,7 @@ import '../images/bloc/images_bloc.dart';
 import '../images/bloc/images_event.dart';
 import '../images/bloc/images_state.dart';
 import '../user/user_bloc.dart';
+import '../user/user_event.dart';
 import '../user/user_state.dart';
 import '../../domain/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
@@ -121,8 +122,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (userState is UserLoaded) {
         setState(() => _isSubmitting = true);
         _uploadedUrls.clear();
-        _uploadNextImage(userState.user.id, 0);
+        try {
+          _uploadNextImage(userState.user.id, 0);
+        } catch (e) {
+          setState(() => _isSubmitting = false);
+          AppSnackBar.error(context, 'Failed to start upload: $e');
+        }
+      } else {
+        AppSnackBar.error(context, 'User session not loaded. Please log in again.');
+        context.read<UserBloc>().add(const WatchCurrentUser());
       }
+    } else {
+      AppSnackBar.warning(context, 'Please fill in all required fields correctly.');
     }
   }
 

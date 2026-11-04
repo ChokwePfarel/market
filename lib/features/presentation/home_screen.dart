@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen>
           .state;
 
       if (userState is UserLoaded) {
-        if (productBloc.state is ProductInitial) {
+        if (productBloc.state is! ProductLoaded) {
           productBloc.add(
             FetchProducts(
               university: userState.user.university,
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen>
               isRefresh: true,
             ),
           );
-        } else {}
+        }
         context.read<ConversationsBloc>().add(
           LoadConversations(userState.user.id),
         );
@@ -252,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen>
                       BlocBuilder<ProductBloc, ProductState>(
                         builder: (context, state) {
                           if (state is ProductInitial ||
+                              state is ProductAddedSuccess ||
                               (state is ProductLoading &&
                                   state is! ProductLoaded)) {
                             return _buildShimmerGrid();

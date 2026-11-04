@@ -112,7 +112,7 @@ class Header extends StatelessWidget {
                 isLabelVisible: unreadCount > 0,
                 label: Text(unreadCount.toString()),
                 child: const Icon(
-                  CupertinoIcons.bell,
+                  CupertinoIcons.chat_bubble,
                   size: 25,
                   color: Colors.black87,
                 ),

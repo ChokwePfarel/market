@@ -67,9 +67,10 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       final conversations =
           await _chatRepository.getConversations(event.currentUserId);
       
-      // Double check filtering here to ensure we ONLYshow current user's chats..
+      // Double check filtering here to ensure we ONLY show current user's chats with messages
       final filtered = conversations.where((c) => 
-        c.userOneId == event.currentUserId || c.userTwoId == event.currentUserId
+        (c.userOneId == event.currentUserId || c.userTwoId == event.currentUserId) &&
+        c.lastMessage != null && c.lastMessage!.trim().isNotEmpty
       ).toList();
 
       final unreadCount =
@@ -168,8 +169,9 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     }).toList();
 
     if (!found) {
-      //debugPrint('ConversationsBloc: Adding new conversation ${event.conversation.id}');
-      updatedList.add(event.conversation);
+      if (event.conversation.lastMessage != null && event.conversation.lastMessage!.trim().isNotEmpty) {
+        updatedList.add(event.conversation);
+      }
     }
 
     updatedList.sort(

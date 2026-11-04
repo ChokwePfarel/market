@@ -66,7 +66,7 @@ throw Exception('Not signed in');
         finalImageUrl = profileImageUrl;
       }
 
-      /*final Map<String, dynamic> updates = {
+      final Map<String, dynamic> updates = {
         'id': user.id,
         'full_name': name,
         'sex': sex,
@@ -76,9 +76,13 @@ throw Exception('Not signed in');
         'is_verified': isVerified,
         'profile_image_url': finalImageUrl,
         'is_profile_completed': true,
-      };*/
-} catch (e) {
-rethrow;
+      };
+
+      await client.from('profiles').upsert(updates);
+      debugPrint('UserRemoteDataSource: User profile created successfully.');
+    } catch (e) {
+      debugPrint('UserRemoteDataSource: Error creating user profile: $e');
+      rethrow;
     }
   }
 
