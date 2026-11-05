@@ -25,6 +25,8 @@ import 'domain/repositories/user_repository.dart';
 import 'domain/repositories/product_repository.dart';
 import 'domain/repositories/payment_repository.dart';
 import 'domain/repositories/cart_repository.dart';
+import 'domain/repositories/service_repository.dart';
+import 'features/services/bloc/service_bloc.dart';
 import 'features/chat/chat_bloc.dart';
 import 'features/conversation/conversation_bloc.dart';
 
@@ -95,6 +97,9 @@ class MarketApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => CartBloc(GetIt.I<CartRepository>()),
+        ),
+        BlocProvider(
+          create: (_) => ServiceBloc(GetIt.I<ServiceRepository>(), GetIt.I<UserRepository>()),
         ),
       ],
       child: const RootGate(),

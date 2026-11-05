@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:market/features/presentation/my_products_page.dart';
+import 'package:market/features/presentation/my_service_page.dart';
 
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/conversation/conversation_bloc.dart';
@@ -81,47 +82,9 @@ class Header extends StatelessWidget {
         const Spacer(),
 
         // Notification / Inbox
-        BlocBuilder<ConversationsBloc, ConversationsState>(
-          builder: (context, state) {
-            int unreadCount = 0;
 
-            if (state is ConversationsLoaded) {
-              unreadCount = state.unreadCount;
-            }
 
-            return IconButton(
-              onPressed: () {
-                final userState = context.read<UserBloc>().state;
 
-                if (userState is UserLoaded) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          InboxPage(currentUserId: userState.user.id),
-                    ),
-                  );
-                }
-              },
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(12),
-              ),
-              icon: Badge(
-                isLabelVisible: unreadCount > 0,
-                label: Text(unreadCount.toString()),
-                child: const Icon(
-                  CupertinoIcons.chat_bubble,
-                  size: 25,
-                  color: Colors.black87,
-                ),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(width: 6),
 
         // Cart Icon
         IconButton(
@@ -163,6 +126,71 @@ class Header extends StatelessWidget {
             size: 25,
             color: Colors.black87,
           ),
+        ),
+
+        const SizedBox(width: 6),
+
+        // My Listings / Collections
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyServicePage()),
+            );
+          },
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white,
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(12),
+          ),
+          icon: const Icon(
+            CupertinoIcons.add_circled,
+            size: 25,
+            color: Colors.black87,
+          ),
+        ),
+
+
+        const SizedBox(width: 6),
+
+        BlocBuilder<ConversationsBloc, ConversationsState>(
+          builder: (context, state) {
+            int unreadCount = 0;
+
+            if (state is ConversationsLoaded) {
+              unreadCount = state.unreadCount;
+            }
+
+            return IconButton(
+              onPressed: () {
+                final userState = context.read<UserBloc>().state;
+
+                if (userState is UserLoaded) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          InboxPage(currentUserId: userState.user.id),
+                    ),
+                  );
+                }
+              },
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(12),
+              ),
+              icon: Badge(
+                isLabelVisible: unreadCount > 0,
+                label: Text(unreadCount.toString()),
+                child: const Icon(
+                  CupertinoIcons.chat_bubble,
+                  size: 25,
+                  color: Colors.black87,
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

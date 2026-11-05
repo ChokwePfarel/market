@@ -1,0 +1,51 @@
+import 'package:equatable/equatable.dart';
+import '../../../domain/entities/service_entity.dart';
+
+abstract class ServiceState extends Equatable {
+  const ServiceState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class ServiceInitial extends ServiceState {}
+
+class ServiceLoading extends ServiceState {}
+
+class ServicesLoaded extends ServiceState {
+  final List<ServiceEntity> services;
+
+  const ServicesLoaded(this.services);
+
+  @override
+  List<Object?> get props => [services];
+}
+
+class UserServicesLoaded extends ServiceState {
+  final List<ServiceEntity> services;
+
+  const UserServicesLoaded(this.services);
+
+  @override
+  List<Object?> get props => [services];
+}
+
+class ServiceCreatedSuccess extends ServiceState {}
+
+class ServicePaymentRequired extends ServiceState {
+  final String serviceId;
+
+  const ServicePaymentRequired({required this.serviceId});
+
+  @override
+  List<Object?> get props => [serviceId];
+}
+
+class ServiceError extends ServiceState {
+  final String message;
+
+  const ServiceError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

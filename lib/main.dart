@@ -29,6 +29,9 @@ import 'domain/repositories/cart_repository.dart';
 import 'data/data_source/payment_remote_data_source.dart';
 import 'data/repositories/payment_repository_impl.dart';
 import 'domain/repositories/payment_repository.dart';
+import 'data/data_source/service_remote_data_source.dart';
+import 'data/repositories/service_repository_impl.dart';
+import 'domain/repositories/service_repository.dart';
 
 import 'core/utils/offline_cache.dart';
 
@@ -139,6 +142,11 @@ void _setupDependencyInjection(bool isSupabaseInitialized) {
 
   getIt.registerLazySingleton<CartRepository>(
     () => CartRepositoryImpl(remoteDataSource: cartRemoteDataSource),
+  );
+
+  final serviceRemoteDataSource = ServiceRemoteDataSourceImpl(Supabase.instance.client);
+  getIt.registerLazySingleton<ServiceRepository>(
+    () => ServiceRepositoryImpl(serviceRemoteDataSource),
   );
 }
 
